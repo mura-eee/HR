@@ -51,8 +51,8 @@ export default function LoginPage() {
             <Image
               src="/tokito-logo.jpg"
               alt="TOKITO CORP Logo"
-              width={120}
-              height={120}
+              width={80}
+              height={80}
               className="object-contain"
             />
           </div>
