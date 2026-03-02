@@ -51,7 +51,7 @@ export default function LoginPage() {
               <Building2 className="w-10 h-10 text-white" />
             </div>
           </div>
-          <p className="text-blue-300 text-sm font-semibold tracking-widest uppercase mb-2">
+          <p className="text-blue-300 text-4xl font-bold tracking-widest uppercase mb-4">
             TOKITO CORP
           </p>
           <h1 className="text-4xl font-bold text-white mb-4">
