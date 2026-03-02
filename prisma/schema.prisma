@@ -37,10 +37,18 @@ model Employee {
   department      Department? @relation(fields: [departmentId], references: [id])
   positionId      String?
   position        Position?   @relation(fields: [positionId], references: [id])
-  grade           Int         @default(1)
-  salaryStep      Int         @default(1)
-  baseSalary      Int         @default(0)
-  profileImage    String?
+  grade                Int         @default(1)
+  salaryStep           Int         @default(1)
+  baseSalary           Int         @default(0)
+  qualificationAllowance Int       @default(0)
+  positionAllowance    Int         @default(0)
+  otherAllowance1Name  String?
+  otherAllowance1Amount Int        @default(0)
+  otherAllowance2Name  String?
+  otherAllowance2Amount Int        @default(0)
+  otherAllowance3Name  String?
+  otherAllowance3Amount Int        @default(0)
+  profileImage         String?
   isActive        Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

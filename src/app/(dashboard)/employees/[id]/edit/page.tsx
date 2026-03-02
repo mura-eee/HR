@@ -65,6 +65,14 @@ export default function EditEmployeePage() {
     grade: "",
     salaryStep: "",
     baseSalary: "",
+    qualificationAllowance: "",
+    positionAllowance: "",
+    otherAllowance1Name: "",
+    otherAllowance1Amount: "",
+    otherAllowance2Name: "",
+    otherAllowance2Amount: "",
+    otherAllowance3Name: "",
+    otherAllowance3Amount: "",
     isActive: true,
   });
 
@@ -100,6 +108,29 @@ export default function EditEmployeePage() {
         baseSalary:
           data.baseSalary !== null && data.baseSalary !== undefined
             ? String(data.baseSalary)
+            : "",
+        qualificationAllowance:
+          data.qualificationAllowance !== null && data.qualificationAllowance !== undefined
+            ? String(data.qualificationAllowance)
+            : "",
+        positionAllowance:
+          data.positionAllowance !== null && data.positionAllowance !== undefined
+            ? String(data.positionAllowance)
+            : "",
+        otherAllowance1Name: data.otherAllowance1Name || "",
+        otherAllowance1Amount:
+          data.otherAllowance1Amount !== null && data.otherAllowance1Amount !== undefined
+            ? String(data.otherAllowance1Amount)
+            : "",
+        otherAllowance2Name: data.otherAllowance2Name || "",
+        otherAllowance2Amount:
+          data.otherAllowance2Amount !== null && data.otherAllowance2Amount !== undefined
+            ? String(data.otherAllowance2Amount)
+            : "",
+        otherAllowance3Name: data.otherAllowance3Name || "",
+        otherAllowance3Amount:
+          data.otherAllowance3Amount !== null && data.otherAllowance3Amount !== undefined
+            ? String(data.otherAllowance3Amount)
             : "",
         isActive: data.isActive,
       });
@@ -420,6 +451,105 @@ export default function EditEmployeePage() {
                   onChange={(e) => handleChange("baseSalary", e.target.value)}
                   placeholder="例: 300000"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="qualificationAllowance">資格手当</Label>
+                <Input
+                  id="qualificationAllowance"
+                  type="number"
+                  min="0"
+                  value={form.qualificationAllowance}
+                  onChange={(e) => handleChange("qualificationAllowance", e.target.value)}
+                  placeholder="例: 10000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="positionAllowance">役職手当</Label>
+                <Input
+                  id="positionAllowance"
+                  type="number"
+                  min="0"
+                  value={form.positionAllowance}
+                  onChange={(e) => handleChange("positionAllowance", e.target.value)}
+                  placeholder="例: 20000"
+                />
+              </div>
+              {/* その他手当1 */}
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance1Name">その他手当①（名称）</Label>
+                <Input
+                  id="otherAllowance1Name"
+                  value={form.otherAllowance1Name}
+                  onChange={(e) => handleChange("otherAllowance1Name", e.target.value)}
+                  placeholder="例: 通勤手当"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance1Amount">その他手当①（金額）</Label>
+                <Input
+                  id="otherAllowance1Amount"
+                  type="number"
+                  min="0"
+                  value={form.otherAllowance1Amount}
+                  onChange={(e) => handleChange("otherAllowance1Amount", e.target.value)}
+                  placeholder="例: 15000"
+                />
+              </div>
+              {/* その他手当2 */}
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance2Name">その他手当②（名称）</Label>
+                <Input
+                  id="otherAllowance2Name"
+                  value={form.otherAllowance2Name}
+                  onChange={(e) => handleChange("otherAllowance2Name", e.target.value)}
+                  placeholder="例: 住宅手当"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance2Amount">その他手当②（金額）</Label>
+                <Input
+                  id="otherAllowance2Amount"
+                  type="number"
+                  min="0"
+                  value={form.otherAllowance2Amount}
+                  onChange={(e) => handleChange("otherAllowance2Amount", e.target.value)}
+                  placeholder="例: 20000"
+                />
+              </div>
+              {/* その他手当3 */}
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance3Name">その他手当③（名称）</Label>
+                <Input
+                  id="otherAllowance3Name"
+                  value={form.otherAllowance3Name}
+                  onChange={(e) => handleChange("otherAllowance3Name", e.target.value)}
+                  placeholder="例: 家族手当"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="otherAllowance3Amount">その他手当③（金額）</Label>
+                <Input
+                  id="otherAllowance3Amount"
+                  type="number"
+                  min="0"
+                  value={form.otherAllowance3Amount}
+                  onChange={(e) => handleChange("otherAllowance3Amount", e.target.value)}
+                  placeholder="例: 10000"
+                />
+              </div>
+              {/* 合計給与（自動計算） */}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>合計給与</Label>
+                <div className="h-10 px-3 py-2 rounded-md border bg-muted font-semibold text-lg">
+                  ¥{(
+                    (parseInt(form.baseSalary || "0", 10) || 0) +
+                    (parseInt(form.qualificationAllowance || "0", 10) || 0) +
+                    (parseInt(form.positionAllowance || "0", 10) || 0) +
+                    (parseInt(form.otherAllowance1Amount || "0", 10) || 0) +
+                    (parseInt(form.otherAllowance2Amount || "0", 10) || 0) +
+                    (parseInt(form.otherAllowance3Amount || "0", 10) || 0)
+                  ).toLocaleString()}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="isActive">ステータス</Label>

@@ -92,6 +92,14 @@ export async function PUT(
       grade,
       salaryStep,
       baseSalary,
+      qualificationAllowance,
+      positionAllowance,
+      otherAllowance1Name,
+      otherAllowance1Amount,
+      otherAllowance2Name,
+      otherAllowance2Amount,
+      otherAllowance3Name,
+      otherAllowance3Amount,
       profileImage,
       isActive,
     } = body;
@@ -149,8 +157,31 @@ export async function PUT(
             : existing.salaryStep,
         baseSalary:
           baseSalary !== undefined && baseSalary !== ""
-            ? parseFloat(baseSalary)
+            ? parseInt(baseSalary, 10)
             : existing.baseSalary,
+        qualificationAllowance:
+          qualificationAllowance !== undefined && qualificationAllowance !== ""
+            ? parseInt(qualificationAllowance, 10)
+            : existing.qualificationAllowance,
+        positionAllowance:
+          positionAllowance !== undefined && positionAllowance !== ""
+            ? parseInt(positionAllowance, 10)
+            : existing.positionAllowance,
+        otherAllowance1Name: otherAllowance1Name ?? existing.otherAllowance1Name,
+        otherAllowance1Amount:
+          otherAllowance1Amount !== undefined && otherAllowance1Amount !== ""
+            ? parseInt(otherAllowance1Amount, 10)
+            : existing.otherAllowance1Amount,
+        otherAllowance2Name: otherAllowance2Name ?? existing.otherAllowance2Name,
+        otherAllowance2Amount:
+          otherAllowance2Amount !== undefined && otherAllowance2Amount !== ""
+            ? parseInt(otherAllowance2Amount, 10)
+            : existing.otherAllowance2Amount,
+        otherAllowance3Name: otherAllowance3Name ?? existing.otherAllowance3Name,
+        otherAllowance3Amount:
+          otherAllowance3Amount !== undefined && otherAllowance3Amount !== ""
+            ? parseInt(otherAllowance3Amount, 10)
+            : existing.otherAllowance3Amount,
         profileImage: profileImage || null,
         isActive: isActive !== undefined ? isActive : existing.isActive,
       },

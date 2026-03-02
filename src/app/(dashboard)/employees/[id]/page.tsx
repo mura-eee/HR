@@ -90,6 +90,14 @@ interface Employee {
   grade: number | null;
   salaryStep: number | null;
   baseSalary: number | null;
+  qualificationAllowance: number | null;
+  positionAllowance: number | null;
+  otherAllowance1Name: string | null;
+  otherAllowance1Amount: number | null;
+  otherAllowance2Name: string | null;
+  otherAllowance2Amount: number | null;
+  otherAllowance3Name: string | null;
+  otherAllowance3Amount: number | null;
   profileImage: string | null;
   isActive: boolean;
   department: Department | null;
@@ -385,8 +393,45 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">基本給</p>
-                  <p className="font-medium text-lg">
-                    {formatCurrency(employee.baseSalary)}
+                  <p className="font-medium">{formatCurrency(employee.baseSalary)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">資格手当</p>
+                  <p className="font-medium">{formatCurrency(employee.qualificationAllowance)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">役職手当</p>
+                  <p className="font-medium">{formatCurrency(employee.positionAllowance)}</p>
+                </div>
+                {employee.otherAllowance1Name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">{employee.otherAllowance1Name}</p>
+                    <p className="font-medium">{formatCurrency(employee.otherAllowance1Amount)}</p>
+                  </div>
+                )}
+                {employee.otherAllowance2Name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">{employee.otherAllowance2Name}</p>
+                    <p className="font-medium">{formatCurrency(employee.otherAllowance2Amount)}</p>
+                  </div>
+                )}
+                {employee.otherAllowance3Name && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">{employee.otherAllowance3Name}</p>
+                    <p className="font-medium">{formatCurrency(employee.otherAllowance3Amount)}</p>
+                  </div>
+                )}
+                <div className="border-t pt-2">
+                  <p className="text-sm text-muted-foreground">合計給与</p>
+                  <p className="font-bold text-lg">
+                    {formatCurrency(
+                      (employee.baseSalary || 0) +
+                      (employee.qualificationAllowance || 0) +
+                      (employee.positionAllowance || 0) +
+                      (employee.otherAllowance1Amount || 0) +
+                      (employee.otherAllowance2Amount || 0) +
+                      (employee.otherAllowance3Amount || 0)
+                    )}
                   </p>
                 </div>
               </CardContent>
