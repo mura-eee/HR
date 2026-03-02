@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("GENERAL")
+  employeeId   String?  @unique
+  employee     Employee? @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Employee {
+  id              String   @id @default(cuid())
+  employeeCode    String   @unique
+  lastName        String
+  firstName       String
+  lastNameKana    String?
+  firstNameKana   String?
+  email           String?
+  phone           String?
+  hireDate        DateTime?
+  birthDate       DateTime?
+  gender          String?
+  address         String?
+  departmentId    String?
+  department      Department? @relation(fields: [departmentId], references: [id])
+  positionId      String?
+  position        Position?   @relation(fields: [positionId], references: [id])
+  grade           Int         @default(1)
+  salaryStep      Int         @default(1)
+  baseSalary      Int         @default(0)
+  profileImage    String?
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user                    User?
+  qualifications          EmployeeQualification[]
+  evaluations             Evaluation[]           @relation("EvaluatedEmployee")
+  firstEvaluations        Evaluation[]           @relation("FirstEvaluator")
+  secondEvaluations       Evaluation[]           @relation("SecondEvaluator")
+}
+
+model Department {
+  id                 String       @id @default(cuid())
+  name               String
+  code               String       @unique
+  parentDepartmentId String?
+  parentDepartment   Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id])
+  childDepartments   Department[] @relation("DepartmentHierarchy")
+  sortOrder          Int          @default(0)
+  employees          Employee[]
+  competencyItems    CompetencyItem[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model Position {
+  id        String     @id @default(cuid())
+  name      String
+  level     Int        @default(0)
+  sortOrder Int        @default(0)
+  employees Employee[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model Qualification {
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employeeQualifications EmployeeQualification[]
+}
+
+model EmployeeQualification {
+  id                String        @id @default(cuid())
+  employeeId        String
+  employee          Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  qualificationId   String
+  qualification     Qualification @relation(fields: [qualificationId], references: [id], onDelete: Cascade)
+  acquiredDate      DateTime?
+  expiryDate        DateTime?
+  certificateNumber String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([employeeId, qualificationId])
+}
+
+model EvaluationPeriod {
+  id                   String     @id @default(cuid())
+  name                 String
+  assessmentStartDate  DateTime
+  assessmentEndDate    DateTime
+  evaluationStartDate  DateTime
+  evaluationEndDate    DateTime
+  half                 String
+  year                 Int
+  isActive             Boolean    @default(true)
+  evaluations          Evaluation[]
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model Evaluation {
+  id                String           @id @default(cuid())
+  employeeId        String
+  employee          Employee         @relation("EvaluatedEmployee", fields: [employeeId], references: [id])
+  periodId          String
+  period            EvaluationPeriod @relation(fields: [periodId], references: [id])
+  firstEvaluatorId  String?
+  firstEvaluator    Employee?        @relation("FirstEvaluator", fields: [firstEvaluatorId], references: [id])
+  secondEvaluatorId String?
+  secondEvaluator   Employee?        @relation("SecondEvaluator", fields: [secondEvaluatorId], references: [id])
+  status            String           @default("DRAFT")
+
+  competencyScore   Float?
+  kpiScore          Float?
+  totalScore        Float?
+  rank              String?
+  salaryStepChange  Int?
+
+  competencyEvaluations CompetencyEvaluation[]
+  kpiGoals              KpiGoal[]
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([employeeId, periodId])
+}
+
+model CompetencyItem {
+  id           String   @id @default(cuid())
+  category     String
+  name         String
+  description  String?
+  coefficient  Int      @default(2)
+  level1Text   String?
+  level2Text   String?
+  level3Text   String?
+  level4Text   String?
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  competencyEvaluations CompetencyEvaluation[]
+}
+
+model CompetencyEvaluation {
+  id               String         @id @default(cuid())
+  evaluationId     String
+  evaluation       Evaluation     @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  competencyItemId String
+  competencyItem   CompetencyItem @relation(fields: [competencyItemId], references: [id])
+  firstScore       Int?
+  secondScore      Int?
+  averageScore     Float?
+  convertedScore   Float?
+  firstComment     String?
+  secondComment    String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([evaluationId, competencyItemId])
+}
+
+model KpiGoal {
+  id           String     @id @default(cuid())
+  evaluationId String
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  title        String
+  detail       String?
+  criteria     String?
+  coefficient  Int        @default(3)
+  level1Text   String?
+  level2Text   String?
+  level3Text   String?
+  level4Text   String?
+  level5Text   String?
+  sortOrder    Int        @default(0)
+
+  selfComment    String?
+  firstComment   String?
+  secondComment  String?
+  firstScore     Int?
+  secondScore    Int?
+  averageScore   Float?
+  convertedScore Float?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
