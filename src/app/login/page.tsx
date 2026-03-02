@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Lock, Mail } from "lucide-react";
-import Image from "next/image";
+import { Building2, Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,15 +47,11 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 items-center justify-center p-12">
         <div className="max-w-md text-center">
           <div className="flex justify-center mb-8">
-            <Image
-              src="/tokito-logo.jpg"
-              alt="TOKITO CORP Logo"
-              width={80}
-              height={80}
-              className="object-contain"
-            />
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <Building2 className="w-10 h-10 text-white" />
+            </div>
           </div>
-          <p className="text-blue-300 text-4xl font-bold tracking-widest uppercase mb-4">
+          <p className="text-blue-300 text-sm font-semibold tracking-widest uppercase mb-2">
             TOKITO CORP
           </p>
           <h1 className="text-4xl font-bold text-white mb-4">
@@ -91,13 +86,9 @@ export default function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center pb-2">
             <div className="flex justify-center mb-4 lg:hidden">
-              <Image
-                src="/tokito-logo.jpg"
-                alt="TOKITO CORP Logo"
-                width={56}
-                height={56}
-                className="object-contain"
-              />
+              <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
+                <Building2 className="w-7 h-7 text-white" />
+              </div>
             </div>
             <CardTitle className="text-2xl font-bold">ログイン</CardTitle>
             <p className="text-muted-foreground text-sm mt-1">
