@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Users,
+  Download,
+  Upload,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -94,6 +96,9 @@ export default function EmployeesPage() {
   const [sortField, setSortField] = useState<SortField>("employeeCode");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [loading, setLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);
@@ -165,6 +170,38 @@ export default function EmployeesPage() {
     setPagination((prev) => ({ ...prev, page: newPage }));
   };
 
+  const handleExport = async () => {
+    const res = await fetch("/api/employees/export");
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `employees_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/employees/import", { method: "POST", body: formData });
+      const result = await res.json();
+      setImportResult(result);
+      fetchEmployees();
+    } catch {
+      setImportResult({ created: 0, updated: 0, errors: ["インポートに失敗しました"] });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <ChevronsUpDown className="ml-1 h-4 w-4 inline opacity-40" />;
@@ -183,13 +220,42 @@ export default function EmployeesPage() {
           <Users className="h-6 w-6" />
           <h1 className="text-2xl font-bold">社員管理</h1>
         </div>
-        <Link href="/employees/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            新規登録
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImport}
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            <Upload className="mr-2 h-4 w-4" />
+            {importing ? "取込中..." : "Excel取込"}
           </Button>
-        </Link>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Excel出力
+          </Button>
+          <Link href="/employees/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      {importResult && (
+        <div className={`rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
+          <p className="font-medium mb-1">インポート結果</p>
+          <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
+          {importResult.errors.length > 0 && (
+            <ul className="mt-2 space-y-1 text-yellow-800">
+              {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       <Card>
         <CardHeader>

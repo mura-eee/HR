@@ -1,0 +1,119 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import * as XLSX from "xlsx";
+
+function parseDate(val: unknown): Date | null {
+  if (!val) return null;
+  // Excel serial number
+  if (typeof val === "number") {
+    return new Date((val - 25569) * 86400 * 1000);
+  }
+  const str = String(val).trim();
+  if (!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function toInt(val: unknown, fallback = 0): number {
+  const n = parseInt(String(val ?? ""), 10);
+  return isNaN(n) ? fallback : n;
+}
+
+export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const formData = await request.formData();
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    return NextResponse.json({ error: "ファイルが選択されていません" }, { status: 400 });
+  }
+
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer, { type: "buffer", cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { raw: true }) as Record<string, unknown>[];
+
+  const departments = await prisma.department.findMany();
+  const positions = await prisma.position.findMany();
+  const deptByCode = Object.fromEntries(departments.map((d) => [d.code, d]));
+  const positionByName = Object.fromEntries(positions.map((p) => [p.name, p]));
+
+  const results = { created: 0, updated: 0, errors: [] as string[] };
+
+  for (const row of rows) {
+    const employeeCode = String(row["社員コード"] ?? "").trim();
+    if (!employeeCode) continue;
+
+    const lastName = String(row["姓"] ?? "").trim();
+    const firstName = String(row["名"] ?? "").trim();
+    const email = String(row["メールアドレス"] ?? "").trim();
+
+    if (!lastName || !firstName || !email) {
+      results.errors.push(`社員コード ${employeeCode}: 姓・名・メールアドレスは必須です`);
+      continue;
+    }
+
+    const deptCode = String(row["部署コード"] ?? "").trim();
+    const dept = deptByCode[deptCode] || null;
+
+    const positionName = String(row["役職名"] ?? "").trim();
+    const position = positionByName[positionName] || null;
+
+    const genderStr = String(row["性別"] ?? "").trim();
+    const gender = genderStr === "男性" ? "male" : genderStr === "女性" ? "female" : genderStr === "その他" ? "other" : null;
+
+    const statusStr = String(row["ステータス"] ?? "").trim();
+    const isActive = statusStr !== "退職";
+
+    const otherAllowance1Name = String(row["その他手当①名称"] ?? "").trim() || null;
+    const otherAllowance2Name = String(row["その他手当②名称"] ?? "").trim() || null;
+    const otherAllowance3Name = String(row["その他手当③名称"] ?? "").trim() || null;
+
+    const data = {
+      lastName,
+      firstName,
+      lastNameKana: String(row["姓（カナ）"] ?? "").trim() || null,
+      firstNameKana: String(row["名（カナ）"] ?? "").trim() || null,
+      email,
+      phone: String(row["電話番号"] ?? "").trim() || null,
+      hireDate: parseDate(row["入社日"]),
+      birthDate: parseDate(row["生年月日"]),
+      gender,
+      address: String(row["住所"] ?? "").trim() || null,
+      departmentId: dept?.id || null,
+      positionId: position?.id || null,
+      grade: toInt(row["等級"], 1),
+      salaryStep: toInt(row["号俸"], 1),
+      baseSalary: toInt(row["基本給"], 0),
+      qualificationAllowance: toInt(row["資格手当"], 0),
+      positionAllowance: toInt(row["役職手当"], 0),
+      otherAllowance1Name,
+      otherAllowance1Amount: toInt(row["その他手当①金額"], 0),
+      otherAllowance2Name,
+      otherAllowance2Amount: toInt(row["その他手当②金額"], 0),
+      otherAllowance3Name,
+      otherAllowance3Amount: toInt(row["その他手当③金額"], 0),
+      isActive,
+    };
+
+    try {
+      const existing = await prisma.employee.findUnique({ where: { employeeCode } });
+      if (existing) {
+        await prisma.employee.update({ where: { employeeCode }, data });
+        results.updated++;
+      } else {
+        await prisma.employee.create({ data: { ...data, employeeCode } });
+        results.created++;
+      }
+    } catch (err) {
+      results.errors.push(`社員コード ${employeeCode}: ${err instanceof Error ? err.message : "エラー"}`);
+    }
+  }
+
+  return NextResponse.json(results);
+}
