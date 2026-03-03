@@ -73,6 +73,24 @@ export default function EditEmployeePage() {
     otherAllowance2Amount: "",
     otherAllowance3Name: "",
     otherAllowance3Amount: "",
+    // 社会保険
+    healthInsuranceNumber: "",
+    healthInsuranceAcquiredDate: "",
+    healthInsuranceLostDate: "",
+    pensionInsuranceNumber: "",
+    pensionAcquiredDate: "",
+    pensionLostDate: "",
+    basicPensionNumber: "",
+    employmentInsuranceAcquiredDate: "",
+    employmentInsuranceLostDate: "",
+    employmentInsuranceNumber: "",
+    // その他
+    bloodType: "",
+    // 緊急連絡先
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactPhone: "",
+    emergencyContactAddress: "",
     isActive: true,
   });
 
@@ -132,6 +150,24 @@ export default function EditEmployeePage() {
           data.otherAllowance3Amount !== null && data.otherAllowance3Amount !== undefined
             ? String(data.otherAllowance3Amount)
             : "",
+        // 社会保険
+        healthInsuranceNumber: data.healthInsuranceNumber || "",
+        healthInsuranceAcquiredDate: formatDateForInput(data.healthInsuranceAcquiredDate),
+        healthInsuranceLostDate: formatDateForInput(data.healthInsuranceLostDate),
+        pensionInsuranceNumber: data.pensionInsuranceNumber || "",
+        pensionAcquiredDate: formatDateForInput(data.pensionAcquiredDate),
+        pensionLostDate: formatDateForInput(data.pensionLostDate),
+        basicPensionNumber: data.basicPensionNumber || "",
+        employmentInsuranceAcquiredDate: formatDateForInput(data.employmentInsuranceAcquiredDate),
+        employmentInsuranceLostDate: formatDateForInput(data.employmentInsuranceLostDate),
+        employmentInsuranceNumber: data.employmentInsuranceNumber || "",
+        // その他
+        bloodType: data.bloodType || "",
+        // 緊急連絡先
+        emergencyContactName: data.emergencyContactName || "",
+        emergencyContactRelationship: data.emergencyContactRelationship || "",
+        emergencyContactPhone: data.emergencyContactPhone || "",
+        emergencyContactAddress: data.emergencyContactAddress || "",
         isActive: data.isActive,
       });
     } catch (err) {
@@ -567,6 +603,173 @@ export default function EditEmployeePage() {
                     <SelectItem value="false">退職</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 社会保険情報 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>社会保険情報</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {/* 健康保険 */}
+              <div className="space-y-2">
+                <Label htmlFor="healthInsuranceNumber">健康保険番号</Label>
+                <Input
+                  id="healthInsuranceNumber"
+                  value={form.healthInsuranceNumber}
+                  onChange={(e) => handleChange("healthInsuranceNumber", e.target.value)}
+                  placeholder="例: 12345678"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="basicPensionNumber">基礎年金番号</Label>
+                <Input
+                  id="basicPensionNumber"
+                  value={form.basicPensionNumber}
+                  onChange={(e) => handleChange("basicPensionNumber", e.target.value)}
+                  placeholder="例: 1234-567890"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="healthInsuranceAcquiredDate">健康保険資格取得日</Label>
+                <Input
+                  id="healthInsuranceAcquiredDate"
+                  type="date"
+                  value={form.healthInsuranceAcquiredDate}
+                  onChange={(e) => handleChange("healthInsuranceAcquiredDate", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="healthInsuranceLostDate">健康保険資格喪失日</Label>
+                <Input
+                  id="healthInsuranceLostDate"
+                  type="date"
+                  value={form.healthInsuranceLostDate}
+                  onChange={(e) => handleChange("healthInsuranceLostDate", e.target.value)}
+                />
+              </div>
+              {/* 厚生年金 */}
+              <div className="space-y-2">
+                <Label htmlFor="pensionInsuranceNumber">厚生年金保険番号</Label>
+                <Input
+                  id="pensionInsuranceNumber"
+                  value={form.pensionInsuranceNumber}
+                  onChange={(e) => handleChange("pensionInsuranceNumber", e.target.value)}
+                  placeholder="例: 12345678"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="employmentInsuranceNumber">雇用保険被保険者番号</Label>
+                <Input
+                  id="employmentInsuranceNumber"
+                  value={form.employmentInsuranceNumber}
+                  onChange={(e) => handleChange("employmentInsuranceNumber", e.target.value)}
+                  placeholder="例: 1234-567890-1"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pensionAcquiredDate">厚生年金資格取得日</Label>
+                <Input
+                  id="pensionAcquiredDate"
+                  type="date"
+                  value={form.pensionAcquiredDate}
+                  onChange={(e) => handleChange("pensionAcquiredDate", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pensionLostDate">厚生年金資格喪失日</Label>
+                <Input
+                  id="pensionLostDate"
+                  type="date"
+                  value={form.pensionLostDate}
+                  onChange={(e) => handleChange("pensionLostDate", e.target.value)}
+                />
+              </div>
+              {/* 雇用保険 */}
+              <div className="space-y-2">
+                <Label htmlFor="employmentInsuranceAcquiredDate">雇用保険資格取得日</Label>
+                <Input
+                  id="employmentInsuranceAcquiredDate"
+                  type="date"
+                  value={form.employmentInsuranceAcquiredDate}
+                  onChange={(e) => handleChange("employmentInsuranceAcquiredDate", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="employmentInsuranceLostDate">雇用保険資格喪失日</Label>
+                <Input
+                  id="employmentInsuranceLostDate"
+                  type="date"
+                  value={form.employmentInsuranceLostDate}
+                  onChange={(e) => handleChange("employmentInsuranceLostDate", e.target.value)}
+                />
+              </div>
+              {/* 血液型 */}
+              <div className="space-y-2">
+                <Label htmlFor="bloodType">血液型</Label>
+                <Select
+                  value={form.bloodType}
+                  onValueChange={(value) => handleChange("bloodType", value)}
+                >
+                  <SelectTrigger id="bloodType">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">A型</SelectItem>
+                    <SelectItem value="B">B型</SelectItem>
+                    <SelectItem value="O">O型</SelectItem>
+                    <SelectItem value="AB">AB型</SelectItem>
+                    <SelectItem value="unknown">不明</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 緊急連絡先 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>緊急連絡先</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">氏名</Label>
+                <Input
+                  id="emergencyContactName"
+                  value={form.emergencyContactName}
+                  onChange={(e) => handleChange("emergencyContactName", e.target.value)}
+                  placeholder="例: 山田 花子"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactRelationship">続柄</Label>
+                <Input
+                  id="emergencyContactRelationship"
+                  value={form.emergencyContactRelationship}
+                  onChange={(e) => handleChange("emergencyContactRelationship", e.target.value)}
+                  placeholder="例: 配偶者"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactPhone">電話番号</Label>
+                <Input
+                  id="emergencyContactPhone"
+                  type="tel"
+                  value={form.emergencyContactPhone}
+                  onChange={(e) => handleChange("emergencyContactPhone", e.target.value)}
+                  placeholder="例: 090-1234-5678"
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="emergencyContactAddress">住所</Label>
+                <Input
+                  id="emergencyContactAddress"
+                  value={form.emergencyContactAddress}
+                  onChange={(e) => handleChange("emergencyContactAddress", e.target.value)}
+                  placeholder="例: 東京都渋谷区..."
+                />
               </div>
             </CardContent>
           </Card>

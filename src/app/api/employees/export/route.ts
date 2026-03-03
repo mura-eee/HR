@@ -51,6 +51,23 @@ export async function GET() {
     "その他手当③名称": emp.otherAllowance3Name || "",
     "その他手当③金額": emp.otherAllowance3Amount ?? 0,
     "ステータス": emp.isActive ? "在籍" : "退職",
+    // 社会保険
+    "健康保険番号": emp.healthInsuranceNumber || "",
+    "健康保険資格取得日": formatDate(emp.healthInsuranceAcquiredDate),
+    "健康保険資格喪失日": formatDate(emp.healthInsuranceLostDate),
+    "厚生年金保険番号": emp.pensionInsuranceNumber || "",
+    "厚生年金資格取得日": formatDate(emp.pensionAcquiredDate),
+    "厚生年金資格喪失日": formatDate(emp.pensionLostDate),
+    "基礎年金番号": emp.basicPensionNumber || "",
+    "雇用保険資格取得日": formatDate(emp.employmentInsuranceAcquiredDate),
+    "雇用保険資格喪失日": formatDate(emp.employmentInsuranceLostDate),
+    "雇用保険被保険者番号": emp.employmentInsuranceNumber || "",
+    "血液型": emp.bloodType ? (emp.bloodType === "unknown" ? "不明" : `${emp.bloodType}型`) : "",
+    // 緊急連絡先
+    "緊急連絡先氏名": emp.emergencyContactName || "",
+    "緊急連絡先続柄": emp.emergencyContactRelationship || "",
+    "緊急連絡先電話番号": emp.emergencyContactPhone || "",
+    "緊急連絡先住所": emp.emergencyContactAddress || "",
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
@@ -63,6 +80,13 @@ export async function GET() {
     { wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 16 },
     { wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 10 },
     { wch: 8 },
+    // 社会保険
+    { wch: 16 }, { wch: 14 }, { wch: 14 },
+    { wch: 16 }, { wch: 14 }, { wch: 14 },
+    { wch: 14 }, { wch: 14 }, { wch: 14 },
+    { wch: 20 }, { wch: 8 },
+    // 緊急連絡先
+    { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 30 },
   ];
 
   const wb = XLSX.utils.book_new();

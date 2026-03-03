@@ -48,6 +48,25 @@ model Employee {
   otherAllowance2Amount Int        @default(0)
   otherAllowance3Name  String?
   otherAllowance3Amount Int        @default(0)
+  // 社会保険
+  healthInsuranceNumber        String?
+  healthInsuranceAcquiredDate  DateTime?
+  healthInsuranceLostDate      DateTime?
+  pensionInsuranceNumber       String?
+  pensionAcquiredDate          DateTime?
+  pensionLostDate              DateTime?
+  basicPensionNumber           String?
+  employmentInsuranceAcquiredDate DateTime?
+  employmentInsuranceLostDate     DateTime?
+  employmentInsuranceNumber    String?
+  // その他
+  bloodType                    String?
+  // 緊急連絡先
+  emergencyContactName         String?
+  emergencyContactRelationship String?
+  emergencyContactPhone        String?
+  emergencyContactAddress      String?
+
   profileImage         String?
   isActive        Boolean     @default(true)
   createdAt       DateTime    @default(now())

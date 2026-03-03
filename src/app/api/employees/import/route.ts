@@ -74,6 +74,15 @@ export async function POST(request: NextRequest) {
     const otherAllowance2Name = String(row["その他手当②名称"] ?? "").trim() || null;
     const otherAllowance3Name = String(row["その他手当③名称"] ?? "").trim() || null;
 
+    // 血液型
+    const bloodTypeRaw = String(row["血液型"] ?? "").trim();
+    const bloodType = bloodTypeRaw === "A型" ? "A"
+      : bloodTypeRaw === "B型" ? "B"
+      : bloodTypeRaw === "O型" ? "O"
+      : bloodTypeRaw === "AB型" ? "AB"
+      : bloodTypeRaw === "不明" ? "unknown"
+      : bloodTypeRaw || null;
+
     const data = {
       lastName,
       firstName,
@@ -99,6 +108,23 @@ export async function POST(request: NextRequest) {
       otherAllowance3Name,
       otherAllowance3Amount: toInt(row["その他手当③金額"], 0),
       isActive,
+      // 社会保険
+      healthInsuranceNumber: String(row["健康保険番号"] ?? "").trim() || null,
+      healthInsuranceAcquiredDate: parseDate(row["健康保険資格取得日"]),
+      healthInsuranceLostDate: parseDate(row["健康保険資格喪失日"]),
+      pensionInsuranceNumber: String(row["厚生年金保険番号"] ?? "").trim() || null,
+      pensionAcquiredDate: parseDate(row["厚生年金資格取得日"]),
+      pensionLostDate: parseDate(row["厚生年金資格喪失日"]),
+      basicPensionNumber: String(row["基礎年金番号"] ?? "").trim() || null,
+      employmentInsuranceAcquiredDate: parseDate(row["雇用保険資格取得日"]),
+      employmentInsuranceLostDate: parseDate(row["雇用保険資格喪失日"]),
+      employmentInsuranceNumber: String(row["雇用保険被保険者番号"] ?? "").trim() || null,
+      bloodType,
+      // 緊急連絡先
+      emergencyContactName: String(row["緊急連絡先氏名"] ?? "").trim() || null,
+      emergencyContactRelationship: String(row["緊急連絡先続柄"] ?? "").trim() || null,
+      emergencyContactPhone: String(row["緊急連絡先電話番号"] ?? "").trim() || null,
+      emergencyContactAddress: String(row["緊急連絡先住所"] ?? "").trim() || null,
     };
 
     try {

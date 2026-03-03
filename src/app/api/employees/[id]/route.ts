@@ -100,6 +100,24 @@ export async function PUT(
       otherAllowance2Amount,
       otherAllowance3Name,
       otherAllowance3Amount,
+      // 社会保険
+      healthInsuranceNumber,
+      healthInsuranceAcquiredDate,
+      healthInsuranceLostDate,
+      pensionInsuranceNumber,
+      pensionAcquiredDate,
+      pensionLostDate,
+      basicPensionNumber,
+      employmentInsuranceAcquiredDate,
+      employmentInsuranceLostDate,
+      employmentInsuranceNumber,
+      // その他
+      bloodType,
+      // 緊急連絡先
+      emergencyContactName,
+      emergencyContactRelationship,
+      emergencyContactPhone,
+      emergencyContactAddress,
       profileImage,
       isActive,
     } = body;
@@ -182,6 +200,24 @@ export async function PUT(
           otherAllowance3Amount !== undefined && otherAllowance3Amount !== ""
             ? parseInt(otherAllowance3Amount, 10)
             : existing.otherAllowance3Amount,
+        // 社会保険
+        healthInsuranceNumber: healthInsuranceNumber ?? existing.healthInsuranceNumber,
+        healthInsuranceAcquiredDate: healthInsuranceAcquiredDate ? new Date(healthInsuranceAcquiredDate) : existing.healthInsuranceAcquiredDate,
+        healthInsuranceLostDate: healthInsuranceLostDate ? new Date(healthInsuranceLostDate) : (healthInsuranceLostDate === "" ? null : existing.healthInsuranceLostDate),
+        pensionInsuranceNumber: pensionInsuranceNumber ?? existing.pensionInsuranceNumber,
+        pensionAcquiredDate: pensionAcquiredDate ? new Date(pensionAcquiredDate) : existing.pensionAcquiredDate,
+        pensionLostDate: pensionLostDate ? new Date(pensionLostDate) : (pensionLostDate === "" ? null : existing.pensionLostDate),
+        basicPensionNumber: basicPensionNumber ?? existing.basicPensionNumber,
+        employmentInsuranceAcquiredDate: employmentInsuranceAcquiredDate ? new Date(employmentInsuranceAcquiredDate) : existing.employmentInsuranceAcquiredDate,
+        employmentInsuranceLostDate: employmentInsuranceLostDate ? new Date(employmentInsuranceLostDate) : (employmentInsuranceLostDate === "" ? null : existing.employmentInsuranceLostDate),
+        employmentInsuranceNumber: employmentInsuranceNumber ?? existing.employmentInsuranceNumber,
+        // その他
+        bloodType: bloodType ?? existing.bloodType,
+        // 緊急連絡先
+        emergencyContactName: emergencyContactName ?? existing.emergencyContactName,
+        emergencyContactRelationship: emergencyContactRelationship ?? existing.emergencyContactRelationship,
+        emergencyContactPhone: emergencyContactPhone ?? existing.emergencyContactPhone,
+        emergencyContactAddress: emergencyContactAddress ?? existing.emergencyContactAddress,
         profileImage: profileImage || null,
         isActive: isActive !== undefined ? isActive : existing.isActive,
       },

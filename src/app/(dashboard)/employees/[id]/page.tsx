@@ -17,6 +17,8 @@ import {
   Award,
   ClipboardList,
   Loader2,
+  Shield,
+  Heart,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -98,6 +100,24 @@ interface Employee {
   otherAllowance2Amount: number | null;
   otherAllowance3Name: string | null;
   otherAllowance3Amount: number | null;
+  // 社会保険
+  healthInsuranceNumber: string | null;
+  healthInsuranceAcquiredDate: string | null;
+  healthInsuranceLostDate: string | null;
+  pensionInsuranceNumber: string | null;
+  pensionAcquiredDate: string | null;
+  pensionLostDate: string | null;
+  basicPensionNumber: string | null;
+  employmentInsuranceAcquiredDate: string | null;
+  employmentInsuranceLostDate: string | null;
+  employmentInsuranceNumber: string | null;
+  // その他
+  bloodType: string | null;
+  // 緊急連絡先
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactPhone: string | null;
+  emergencyContactAddress: string | null;
   profileImage: string | null;
   isActive: boolean;
   department: Department | null;
@@ -272,6 +292,7 @@ export default function EmployeeDetailPage() {
         {/* Basic Info Tab */}
         <TabsContent value="basic" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
+
             {/* Personal Information */}
             <Card>
               <CardHeader>
@@ -437,6 +458,100 @@ export default function EmployeeDetailPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* 社会保険情報 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="h-5 w-5" />
+                社会保険情報
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">健康保険番号</p>
+                  <p className="font-medium">{employee.healthInsuranceNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">健康保険資格取得日</p>
+                  <p className="font-medium">{formatDate(employee.healthInsuranceAcquiredDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">健康保険資格喪失日</p>
+                  <p className="font-medium">{formatDate(employee.healthInsuranceLostDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">厚生年金保険番号</p>
+                  <p className="font-medium">{employee.pensionInsuranceNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">厚生年金資格取得日</p>
+                  <p className="font-medium">{formatDate(employee.pensionAcquiredDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">厚生年金資格喪失日</p>
+                  <p className="font-medium">{formatDate(employee.pensionLostDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">基礎年金番号</p>
+                  <p className="font-medium">{employee.basicPensionNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">雇用保険資格取得日</p>
+                  <p className="font-medium">{formatDate(employee.employmentInsuranceAcquiredDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">雇用保険資格喪失日</p>
+                  <p className="font-medium">{formatDate(employee.employmentInsuranceLostDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">雇用保険被保険者番号</p>
+                  <p className="font-medium">{employee.employmentInsuranceNumber || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">血液型</p>
+                  <p className="font-medium">
+                    {employee.bloodType
+                      ? employee.bloodType === "unknown"
+                        ? "不明"
+                        : `${employee.bloodType}型`
+                      : "-"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 緊急連絡先 */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Heart className="h-5 w-5" />
+                緊急連絡先
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">氏名</p>
+                  <p className="font-medium">{employee.emergencyContactName || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">続柄</p>
+                  <p className="font-medium">{employee.emergencyContactRelationship || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">電話番号</p>
+                  <p className="font-medium">{employee.emergencyContactPhone || "-"}</p>
+                </div>
+                <div className="sm:col-span-2 md:col-span-4">
+                  <p className="text-sm text-muted-foreground">住所</p>
+                  <p className="font-medium">{employee.emergencyContactAddress || "-"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Qualifications Tab */}
