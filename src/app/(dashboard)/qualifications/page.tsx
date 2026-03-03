@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import {
   Card,
@@ -43,6 +43,8 @@ import {
   Trash2,
   AlertTriangle,
   Search,
+  Download,
+  Upload,
 } from "lucide-react";
 
 // --- Types ---
@@ -130,6 +132,11 @@ export default function QualificationsPage() {
 
   // Delete confirm state
   const [deleteTarget, setDeleteTarget] = useState<{ type: "qual" | "empQual"; id: string } | null>(null);
+
+  // Import state
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- Data Fetching ---
 
@@ -299,6 +306,40 @@ export default function QualificationsPage() {
     }
   };
 
+  // --- Export / Import ---
+
+  const handleExport = async () => {
+    const res = await fetch("/api/employee-qualifications/export");
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `qualifications_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportResult(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/employee-qualifications/import", { method: "POST", body: formData });
+      const result = await res.json();
+      setImportResult(result);
+      fetchEmployeeQualifications();
+    } catch {
+      setImportResult({ created: 0, updated: 0, errors: ["インポートに失敗しました"] });
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   // --- Render ---
 
   if (!session) return null;
@@ -404,12 +445,41 @@ export default function QualificationsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">社員資格一覧</CardTitle>
-              <Button onClick={openEmpQualDialog} size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                資格割当
-              </Button>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={handleImport}
+                />
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                  <Upload className="w-4 h-4 mr-1" />
+                  {importing ? "取込中..." : "Excel取込"}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExport}>
+                  <Download className="w-4 h-4 mr-1" />
+                  Excel出力
+                </Button>
+                <Button onClick={openEmpQualDialog} size="sm">
+                  <Plus className="w-4 h-4 mr-1" />
+                  資格割当
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {importResult && (
+                <div className={`rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
+                  <p className="font-medium mb-1">インポート結果</p>
+                  <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
+                  {importResult.errors.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-yellow-800">
+                      {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
+
               {/* Filters */}
               <div className="flex flex-wrap items-end gap-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-2">
