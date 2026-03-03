@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -79,7 +80,7 @@ function TreeNode({
   isLast: boolean;
   depth: number;
 }) {
-  const hasChildren = node.children.length > 0;
+  const hasChildren = node.children.length > 0 || node.employees.length > 0;
   const isExpanded = expandedIds.has(node.id);
 
   return (
@@ -137,20 +138,42 @@ function TreeNode({
         </Badge>
       </button>
 
-      {/* Children */}
+      {/* Children & Employees */}
       {hasChildren && isExpanded && (
         <div className="relative ml-10 mt-1 space-y-1">
-          {/* Vertical line connecting children */}
+          {/* Employees */}
+          {node.employees.map((emp) => (
+            <Link
+              key={emp.id}
+              href={`/employees/${emp.id}`}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white hover:bg-blue-50 hover:border-blue-300 transition-all"
+            >
+              <Avatar className="w-7 h-7">
+                <AvatarFallback className="text-xs">
+                  {emp.lastName.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium text-gray-800">
+                  {emp.lastName} {emp.firstName}
+                </p>
+                {emp.position && (
+                  <p className="text-xs text-muted-foreground">
+                    {emp.position.name}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+
+          {/* Child departments */}
           {node.children.length > 1 && (
             <div
               className="absolute -left-6 top-0 border-l-2 border-gray-300"
-              style={{
-                height: "calc(100% - 16px)",
-              }}
+              style={{ height: "calc(100% - 16px)" }}
               aria-hidden="true"
             />
           )}
-
           {node.children.map((child, index) => (
             <TreeNode
               key={child.id}
@@ -284,11 +307,12 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
             {dept.employees.length > 0 ? (
               <div className="space-y-2">
                 {dept.employees.map((emp) => (
-                  <div
+                  <Link
                     key={emp.id}
-                    className="flex items-center gap-3 py-1.5 border-b last:border-0"
+                    href={`/employees/${emp.id}`}
+                    className="flex items-center gap-3 py-1.5 border-b last:border-0 hover:bg-blue-50 rounded px-1 transition-colors"
                   >
-                    <Avatar size="sm">
+                    <Avatar className="w-8 h-8">
                       <AvatarFallback className="text-xs">
                         {emp.lastName.charAt(0)}
                       </AvatarFallback>
@@ -303,7 +327,7 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
