@@ -642,16 +642,16 @@ export default function EvaluationDetailPage() {
 
                       return (
                         <TableRow key={ce.id}>
-                          <TableCell className="text-xs font-medium">
+                          <TableCell className="text-xs font-medium align-top whitespace-normal break-words">
                             {ce.competencyItem.category}
                           </TableCell>
-                          <TableCell className="text-xs font-medium">
+                          <TableCell className="text-xs font-medium align-top whitespace-normal break-words">
                             {ce.competencyItem.name}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="text-xs text-muted-foreground align-top whitespace-normal break-words">
                             {ce.competencyItem.description || "-"}
                           </TableCell>
-                          <TableCell className="text-center font-mono text-sm">
+                          <TableCell className="text-center font-mono text-sm align-top">
                             {ce.competencyItem.coefficient}
                           </TableCell>
                           {/* Level columns with highlighting */}
@@ -663,7 +663,7 @@ export default function EvaluationDetailPage() {
                             return (
                               <TableCell
                                 key={level}
-                                className={`text-xs ${
+                                className={`text-xs align-top ${
                                   isFirst && isSecond
                                     ? "bg-green-100 ring-2 ring-green-400 ring-inset"
                                     : isFirst
@@ -673,7 +673,7 @@ export default function EvaluationDetailPage() {
                                     : ""
                                 }`}
                               >
-                                <div className="max-w-[120px]">
+                                <div className="w-[120px] whitespace-normal break-words">
                                   {text || "-"}
                                   {(isFirst || isSecond) && (
                                     <div className="flex gap-1 mt-1">
@@ -694,7 +694,7 @@ export default function EvaluationDetailPage() {
                             );
                           })}
                           {/* 1st Comment */}
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Textarea
                               value={local?.firstComment ?? ce.firstComment ?? ""}
                               onChange={(e) =>
@@ -713,7 +713,7 @@ export default function EvaluationDetailPage() {
                             />
                           </TableCell>
                           {/* 2nd Comment */}
-                          <TableCell>
+                          <TableCell className="align-top">
                             <Textarea
                               value={local?.secondComment ?? ce.secondComment ?? ""}
                               onChange={(e) =>
@@ -732,7 +732,7 @@ export default function EvaluationDetailPage() {
                             />
                           </TableCell>
                           {/* 1st Score */}
-                          <TableCell className="text-center">
+                          <TableCell className="text-center align-top">
                             <Select
                               value={firstScoreVal?.toString() || ""}
                               onValueChange={(val) => {
@@ -762,7 +762,7 @@ export default function EvaluationDetailPage() {
                             </Select>
                           </TableCell>
                           {/* 2nd Score */}
-                          <TableCell className="text-center">
+                          <TableCell className="text-center align-top">
                             <Select
                               value={secondScoreVal?.toString() || ""}
                               onValueChange={(val) => {
@@ -791,11 +791,11 @@ export default function EvaluationDetailPage() {
                             </Select>
                           </TableCell>
                           {/* Average */}
-                          <TableCell className="text-center font-mono text-sm">
+                          <TableCell className="text-center font-mono text-sm align-top">
                             {avg != null ? avg.toFixed(1) : "-"}
                           </TableCell>
                           {/* Converted Score */}
-                          <TableCell className="text-center font-mono text-sm font-bold">
+                          <TableCell className="text-center font-mono text-sm font-bold align-top">
                             {converted != null ? converted.toFixed(1) : "-"}
                           </TableCell>
                         </TableRow>
@@ -882,7 +882,7 @@ export default function EvaluationDetailPage() {
                         return (
                           <TableRow key={kpi.id}>
                             {/* Title */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Input
                                 value={local?.title ?? kpi.title}
                                 onChange={(e) =>
@@ -900,7 +900,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* Detail */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Textarea
                                 value={local?.detail ?? kpi.detail ?? ""}
                                 onChange={(e) =>
@@ -918,7 +918,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* Criteria */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Input
                                 value={local?.criteria ?? kpi.criteria ?? ""}
                                 onChange={(e) =>
@@ -936,7 +936,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* Coefficient */}
-                            <TableCell className="text-center">
+                            <TableCell className="text-center align-top">
                               <Select
                                 value={(local?.coefficient ?? kpi.coefficient)?.toString()}
                                 onValueChange={(val) => {
@@ -974,7 +974,7 @@ export default function EvaluationDetailPage() {
                               return (
                                 <TableCell
                                   key={level}
-                                  className={`text-xs ${
+                                  className={`text-xs align-top ${
                                     isFirst && isSecond
                                       ? "bg-green-100 ring-2 ring-green-400 ring-inset"
                                       : isFirst
@@ -984,7 +984,7 @@ export default function EvaluationDetailPage() {
                                       : ""
                                   }`}
                                 >
-                                  <div className="max-w-[100px]">
+                                  <div className="w-[95px] whitespace-normal break-words">
                                     {isReadOnly ? (
                                       <span>{text || "-"}</span>
                                     ) : (
@@ -1023,7 +1023,7 @@ export default function EvaluationDetailPage() {
                               );
                             })}
                             {/* Self Comment */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Textarea
                                 value={local?.selfComment ?? kpi.selfComment ?? ""}
                                 onChange={(e) =>
@@ -1042,7 +1042,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* 1st Comment */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Textarea
                                 value={local?.firstComment ?? kpi.firstComment ?? ""}
                                 onChange={(e) =>
@@ -1061,7 +1061,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* 2nd Comment */}
-                            <TableCell>
+                            <TableCell className="align-top">
                               <Textarea
                                 value={local?.secondComment ?? kpi.secondComment ?? ""}
                                 onChange={(e) =>
@@ -1080,7 +1080,7 @@ export default function EvaluationDetailPage() {
                               />
                             </TableCell>
                             {/* 1st Score */}
-                            <TableCell className="text-center">
+                            <TableCell className="text-center align-top">
                               <Select
                                 value={firstScoreVal?.toString() || ""}
                                 onValueChange={(val) => {
@@ -1109,7 +1109,7 @@ export default function EvaluationDetailPage() {
                               </Select>
                             </TableCell>
                             {/* 2nd Score */}
-                            <TableCell className="text-center">
+                            <TableCell className="text-center align-top">
                               <Select
                                 value={secondScoreVal?.toString() || ""}
                                 onValueChange={(val) => {
@@ -1138,11 +1138,11 @@ export default function EvaluationDetailPage() {
                               </Select>
                             </TableCell>
                             {/* Average */}
-                            <TableCell className="text-center font-mono text-sm">
+                            <TableCell className="text-center font-mono text-sm align-top">
                               {avg != null ? avg.toFixed(1) : "-"}
                             </TableCell>
                             {/* Converted Score */}
-                            <TableCell className="text-center font-mono text-sm font-bold">
+                            <TableCell className="text-center font-mono text-sm font-bold align-top">
                               {converted != null ? converted.toFixed(1) : "-"}
                             </TableCell>
                             {/* Delete */}
