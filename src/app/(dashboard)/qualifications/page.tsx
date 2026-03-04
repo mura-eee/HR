@@ -329,11 +329,26 @@ export default function QualificationsPage() {
     formData.append("file", file);
     try {
       const res = await fetch("/api/employee-qualifications/import", { method: "POST", body: formData });
-      const result = await res.json();
+      let json: unknown;
+      try {
+        json = await res.json();
+      } catch {
+        setImportResult({ created: 0, updated: 0, errors: [`サーバーエラー (HTTP ${res.status}): レスポンスの解析に失敗しました`] });
+        return;
+      }
+      if (!res.ok) {
+        const msg = (json as { error?: string })?.error ?? `サーバーエラー (HTTP ${res.status})`;
+        setImportResult({ created: 0, updated: 0, errors: [msg] });
+        return;
+      }
+      const result = json as { created: number; updated: number; errors: string[] };
       setImportResult(result);
-      fetchEmployeeQualifications();
-    } catch {
-      setImportResult({ created: 0, updated: 0, errors: ["インポートに失敗しました"] });
+      if (result.created > 0 || result.updated > 0) {
+        fetchEmployeeQualifications();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "不明なエラーが発生しました";
+      setImportResult({ created: 0, updated: 0, errors: [`ネットワークエラー: ${msg}`] });
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -469,14 +484,45 @@ export default function QualificationsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {importResult && (
-                <div className={`rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
-                  <p className="font-medium mb-1">インポート結果</p>
-                  <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
-                  {importResult.errors.length > 0 && (
-                    <ul className="mt-2 space-y-1 text-yellow-800">
-                      {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
-                    </ul>
-                  )}
+                <div className={`rounded-md p-4 text-sm ${
+                  importResult.created === 0 && importResult.updated === 0 && importResult.errors.length > 0
+                    ? "bg-red-50 border border-red-200"
+                    : importResult.errors.length > 0
+                    ? "bg-yellow-50 border border-yellow-200"
+                    : "bg-green-50 border border-green-200"
+                }`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="font-medium mb-1">インポート結果</p>
+                      <p className="text-muted-foreground">
+                        新規登録: <span className="font-semibold text-foreground">{importResult.created}件</span>
+                        {" / "}
+                        更新: <span className="font-semibold text-foreground">{importResult.updated}件</span>
+                        {importResult.errors.length > 0 && (
+                          <>
+                            {" / "}
+                            エラー: <span className="font-semibold text-red-600">{importResult.errors.length}件</span>
+                          </>
+                        )}
+                      </p>
+                      {importResult.errors.length > 0 && (
+                        <ul className="mt-2 space-y-1 text-red-700">
+                          {importResult.errors.map((e, i) => (
+                            <li key={i} className="flex gap-1">
+                              <span className="shrink-0">⚠</span>
+                              <span>{e}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setImportResult(null)}
+                      className="text-muted-foreground hover:text-foreground shrink-0 text-lg leading-none"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               )}
 

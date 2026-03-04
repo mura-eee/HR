@@ -34,18 +34,28 @@ export async function POST(request: NextRequest) {
 
   const results = { created: 0, updated: 0, errors: [] as string[] };
 
-  for (const row of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const rowNum = i + 2; // 1行目はヘッダーなので2行目から
     const employeeCode = String(row["社員番号"] ?? "").trim();
     const qualificationName = String(row["資格"] ?? "").trim();
 
-    if (!employeeCode || !qualificationName) {
-      results.errors.push(`社員番号または資格が未入力の行をスキップしました`);
+    if (!employeeCode && !qualificationName) {
+      // 空行はスキップ
+      continue;
+    }
+    if (!employeeCode) {
+      results.errors.push(`${rowNum}行目: 社員番号が入力されていません`);
+      continue;
+    }
+    if (!qualificationName) {
+      results.errors.push(`${rowNum}行目 (社員番号: ${employeeCode}): 資格名が入力されていません`);
       continue;
     }
 
     const employee = await prisma.employee.findUnique({ where: { employeeCode } });
     if (!employee) {
-      results.errors.push(`社員番号 ${employeeCode}: 社員が見つかりません`);
+      results.errors.push(`${rowNum}行目: 社員番号「${employeeCode}」の社員が見つかりません`);
       continue;
     }
 
@@ -54,14 +64,23 @@ export async function POST(request: NextRequest) {
       where: { name: qualificationName },
     });
     if (!qualification) {
-      qualification = await prisma.qualification.create({
-        data: { name: qualificationName },
-      });
+      try {
+        qualification = await prisma.qualification.create({
+          data: { name: qualificationName },
+        });
+      } catch (err) {
+        results.errors.push(
+          `${rowNum}行目: 資格「${qualificationName}」の作成に失敗しました: ${err instanceof Error ? err.message : "不明なエラー"}`
+        );
+        continue;
+      }
     }
 
+    const acquiredDate = parseDate(row["取得日"]);
+    const expiryDate = parseDate(row["有効期限"]);
     const data = {
-      acquiredDate: parseDate(row["取得日"]),
-      expiryDate: parseDate(row["有効期限"]),
+      acquiredDate,
+      expiryDate,
       certificateNumber: String(row["証明書番号"] ?? "").trim() || null,
     };
 
@@ -93,7 +112,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       results.errors.push(
-        `社員番号 ${employeeCode} / 資格 ${qualificationName}: ${err instanceof Error ? err.message : "エラー"}`
+        `${rowNum}行目 (社員番号: ${employeeCode} / 資格: ${qualificationName}): ${err instanceof Error ? err.message : "不明なエラー"}`
       );
     }
   }
