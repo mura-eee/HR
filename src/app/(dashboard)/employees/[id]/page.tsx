@@ -124,7 +124,7 @@ interface Employee {
   department: Department | null;
   position: Position | null;
   jobType: { id: string; name: string } | null;
-  employeeQualifications: EmployeeQualification[];
+  qualifications: EmployeeQualification[];
   evaluations: Evaluation[];
 }
 
@@ -574,8 +574,8 @@ export default function EmployeeDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {employee.employeeQualifications &&
-              employee.employeeQualifications.length > 0 ? (
+              {employee.qualifications &&
+              employee.qualifications.length > 0 ? (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
@@ -588,7 +588,7 @@ export default function EmployeeDetailPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {employee.employeeQualifications.map((eq) => {
+                      {employee.qualifications.map((eq) => {
                         const isExpired =
                           eq.expiryDate &&
                           new Date(eq.expiryDate) < new Date();
