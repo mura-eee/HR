@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 
 interface Department {
   id: string;
@@ -60,6 +61,8 @@ export default function EditEmployeePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const { can } = useFieldPermissions();
 
   const [form, setForm] = useState({
     employeeCode: "",
@@ -284,6 +287,30 @@ export default function EditEmployeePage() {
     );
   }
 
+  // 給与合計（表示対象フィールドのみ集計）
+  const salaryTotal =
+    (can("baseSalary") !== "hidden" ? parseInt(form.baseSalary || "0", 10) || 0 : 0) +
+    (can("qualificationAllowance") !== "hidden" ? parseInt(form.qualificationAllowance || "0", 10) || 0 : 0) +
+    (can("positionAllowance") !== "hidden" ? parseInt(form.positionAllowance || "0", 10) || 0 : 0) +
+    (can("otherAllowance1") !== "hidden" ? parseInt(form.otherAllowance1Amount || "0", 10) || 0 : 0) +
+    (can("otherAllowance2") !== "hidden" ? parseInt(form.otherAllowance2Amount || "0", 10) || 0 : 0) +
+    (can("otherAllowance3") !== "hidden" ? parseInt(form.otherAllowance3Amount || "0", 10) || 0 : 0);
+
+  const showSalaryTotal =
+    can("baseSalary") !== "hidden" ||
+    can("qualificationAllowance") !== "hidden" ||
+    can("positionAllowance") !== "hidden" ||
+    can("otherAllowance1") !== "hidden" ||
+    can("otherAllowance2") !== "hidden" ||
+    can("otherAllowance3") !== "hidden";
+
+  const showSocialInsuranceCard =
+    can("healthInsurance") !== "hidden" ||
+    can("pension") !== "hidden" ||
+    can("basicPensionNumber") !== "hidden" ||
+    can("employmentInsurance") !== "hidden" ||
+    can("bloodType") !== "hidden";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -304,137 +331,172 @@ export default function EditEmployeePage() {
               <CardTitle>基本情報</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="employeeCode">
-                  社員コード <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="employeeCode"
-                  value={form.employeeCode}
-                  onChange={(e) => handleChange("employeeCode", e.target.value)}
-                  placeholder="例: EMP001"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">
-                  メールアドレス <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  placeholder="例: taro@example.com"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">
-                  姓 <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="lastName"
-                  value={form.lastName}
-                  onChange={(e) => handleChange("lastName", e.target.value)}
-                  placeholder="例: 山田"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="firstName">
-                  名 <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="firstName"
-                  value={form.firstName}
-                  onChange={(e) => handleChange("firstName", e.target.value)}
-                  placeholder="例: 太郎"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastNameKana">姓（カナ）</Label>
-                <Input
-                  id="lastNameKana"
-                  value={form.lastNameKana}
-                  onChange={(e) => handleChange("lastNameKana", e.target.value)}
-                  placeholder="例: ヤマダ"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="firstNameKana">名（カナ）</Label>
-                <Input
-                  id="firstNameKana"
-                  value={form.firstNameKana}
-                  onChange={(e) => handleChange("firstNameKana", e.target.value)}
-                  placeholder="例: タロウ"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">電話番号</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
-                  placeholder="例: 090-1234-5678"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">性別</Label>
-                <Select
-                  value={form.gender}
-                  onValueChange={(value) => handleChange("gender", value)}
-                >
-                  <SelectTrigger id="gender">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">男性</SelectItem>
-                    <SelectItem value="female">女性</SelectItem>
-                    <SelectItem value="other">その他</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="address">住所</Label>
-                <Input
-                  id="address"
-                  value={form.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  placeholder="例: 東京都渋谷区..."
-                />
-              </div>
+              {can("employeeCode") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="employeeCode">
+                    社員コード <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="employeeCode"
+                    value={form.employeeCode}
+                    onChange={(e) => handleChange("employeeCode", e.target.value)}
+                    placeholder="例: EMP001"
+                    required
+                    disabled={can("employeeCode") === "view"}
+                  />
+                </div>
+              )}
+              {can("email") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="email">
+                    メールアドレス <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    placeholder="例: taro@example.com"
+                    required
+                    disabled={can("email") === "view"}
+                  />
+                </div>
+              )}
+              {can("name") !== "hidden" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">
+                      姓 <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="lastName"
+                      value={form.lastName}
+                      onChange={(e) => handleChange("lastName", e.target.value)}
+                      placeholder="例: 山田"
+                      required
+                      disabled={can("name") === "view"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">
+                      名 <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="firstName"
+                      value={form.firstName}
+                      onChange={(e) => handleChange("firstName", e.target.value)}
+                      placeholder="例: 太郎"
+                      required
+                      disabled={can("name") === "view"}
+                    />
+                  </div>
+                </>
+              )}
+              {can("nameKana") !== "hidden" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastNameKana">姓（カナ）</Label>
+                    <Input
+                      id="lastNameKana"
+                      value={form.lastNameKana}
+                      onChange={(e) => handleChange("lastNameKana", e.target.value)}
+                      placeholder="例: ヤマダ"
+                      disabled={can("nameKana") === "view"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstNameKana">名（カナ）</Label>
+                    <Input
+                      id="firstNameKana"
+                      value={form.firstNameKana}
+                      onChange={(e) => handleChange("firstNameKana", e.target.value)}
+                      placeholder="例: タロウ"
+                      disabled={can("nameKana") === "view"}
+                    />
+                  </div>
+                </>
+              )}
+              {can("phone") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="phone">電話番号</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => handleChange("phone", e.target.value)}
+                    placeholder="例: 090-1234-5678"
+                    disabled={can("phone") === "view"}
+                  />
+                </div>
+              )}
+              {can("gender") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="gender">性別</Label>
+                  <Select
+                    value={form.gender}
+                    onValueChange={(value) => handleChange("gender", value)}
+                    disabled={can("gender") === "view"}
+                  >
+                    <SelectTrigger id="gender">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">男性</SelectItem>
+                      <SelectItem value="female">女性</SelectItem>
+                      <SelectItem value="other">その他</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {can("address") !== "hidden" && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="address">住所</Label>
+                  <Input
+                    id="address"
+                    value={form.address}
+                    onChange={(e) => handleChange("address", e.target.value)}
+                    placeholder="例: 東京都渋谷区..."
+                    disabled={can("address") === "view"}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Dates */}
-          <Card>
-            <CardHeader>
-              <CardTitle>日付情報</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="hireDate">入社日</Label>
-                <Input
-                  id="hireDate"
-                  type="date"
-                  value={form.hireDate}
-                  onChange={(e) => handleChange("hireDate", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="birthDate">生年月日</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  value={form.birthDate}
-                  onChange={(e) => handleChange("birthDate", e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {(can("hireDate") !== "hidden" || can("birthDate") !== "hidden") && (
+            <Card>
+              <CardHeader>
+                <CardTitle>日付情報</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                {can("hireDate") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="hireDate">入社日</Label>
+                    <Input
+                      id="hireDate"
+                      type="date"
+                      value={form.hireDate}
+                      onChange={(e) => handleChange("hireDate", e.target.value)}
+                      disabled={can("hireDate") === "view"}
+                    />
+                  </div>
+                )}
+                {can("birthDate") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="birthDate">生年月日</Label>
+                    <Input
+                      id="birthDate"
+                      type="date"
+                      value={form.birthDate}
+                      onChange={(e) => handleChange("birthDate", e.target.value)}
+                      disabled={can("birthDate") === "view"}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Organization */}
           <Card>
@@ -442,212 +504,252 @@ export default function EditEmployeePage() {
               <CardTitle>所属・給与情報</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="companyId">所属</Label>
-                <Select
-                  value={form.companyId}
-                  onValueChange={(value) => handleChange("companyId", value === "none" ? "" : value)}
-                >
-                  <SelectTrigger id="companyId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">未設定</SelectItem>
-                    {companies.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="departmentId">部署</Label>
-                <Select
-                  value={form.departmentId}
-                  onValueChange={(value) => handleChange("departmentId", value)}
-                >
-                  <SelectTrigger id="departmentId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="positionId">役職</Label>
-                <Select
-                  value={form.positionId}
-                  onValueChange={(value) => handleChange("positionId", value)}
-                >
-                  <SelectTrigger id="positionId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {positions.map((pos) => (
-                      <SelectItem key={pos.id} value={pos.id}>
-                        {pos.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="jobTypeId">職種</Label>
-                <Select
-                  value={form.jobTypeId}
-                  onValueChange={(value) => handleChange("jobTypeId", value === "none" ? "" : value)}
-                >
-                  <SelectTrigger id="jobTypeId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">未設定</SelectItem>
-                    {jobTypes.map((jt) => (
-                      <SelectItem key={jt.id} value={jt.id}>
-                        {jt.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="grade">等級</Label>
-                <Input
-                  id="grade"
-                  type="number"
-                  min="1"
-                  value={form.grade}
-                  onChange={(e) => handleChange("grade", e.target.value)}
-                  placeholder="例: 3"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="salaryStep">号俸</Label>
-                <Input
-                  id="salaryStep"
-                  type="number"
-                  min="1"
-                  value={form.salaryStep}
-                  onChange={(e) => handleChange("salaryStep", e.target.value)}
-                  placeholder="例: 5"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="baseSalary">基本給</Label>
-                <Input
-                  id="baseSalary"
-                  type="number"
-                  min="0"
-                  value={form.baseSalary}
-                  onChange={(e) => handleChange("baseSalary", e.target.value)}
-                  placeholder="例: 300000"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="qualificationAllowance">資格手当</Label>
-                <Input
-                  id="qualificationAllowance"
-                  type="number"
-                  min="0"
-                  value={form.qualificationAllowance}
-                  onChange={(e) => handleChange("qualificationAllowance", e.target.value)}
-                  placeholder="例: 10000"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="positionAllowance">役職手当</Label>
-                <Input
-                  id="positionAllowance"
-                  type="number"
-                  min="0"
-                  value={form.positionAllowance}
-                  onChange={(e) => handleChange("positionAllowance", e.target.value)}
-                  placeholder="例: 20000"
-                />
-              </div>
-              {/* その他手当1 */}
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance1Name">その他手当①（名称）</Label>
-                <Input
-                  id="otherAllowance1Name"
-                  value={form.otherAllowance1Name}
-                  onChange={(e) => handleChange("otherAllowance1Name", e.target.value)}
-                  placeholder="例: 通勤手当"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance1Amount">その他手当①（金額）</Label>
-                <Input
-                  id="otherAllowance1Amount"
-                  type="number"
-                  min="0"
-                  value={form.otherAllowance1Amount}
-                  onChange={(e) => handleChange("otherAllowance1Amount", e.target.value)}
-                  placeholder="例: 15000"
-                />
-              </div>
-              {/* その他手当2 */}
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance2Name">その他手当②（名称）</Label>
-                <Input
-                  id="otherAllowance2Name"
-                  value={form.otherAllowance2Name}
-                  onChange={(e) => handleChange("otherAllowance2Name", e.target.value)}
-                  placeholder="例: 住宅手当"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance2Amount">その他手当②（金額）</Label>
-                <Input
-                  id="otherAllowance2Amount"
-                  type="number"
-                  min="0"
-                  value={form.otherAllowance2Amount}
-                  onChange={(e) => handleChange("otherAllowance2Amount", e.target.value)}
-                  placeholder="例: 20000"
-                />
-              </div>
-              {/* その他手当3 */}
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance3Name">その他手当③（名称）</Label>
-                <Input
-                  id="otherAllowance3Name"
-                  value={form.otherAllowance3Name}
-                  onChange={(e) => handleChange("otherAllowance3Name", e.target.value)}
-                  placeholder="例: 家族手当"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="otherAllowance3Amount">その他手当③（金額）</Label>
-                <Input
-                  id="otherAllowance3Amount"
-                  type="number"
-                  min="0"
-                  value={form.otherAllowance3Amount}
-                  onChange={(e) => handleChange("otherAllowance3Amount", e.target.value)}
-                  placeholder="例: 10000"
-                />
-              </div>
-              {/* 合計給与（自動計算） */}
-              <div className="space-y-2 sm:col-span-2">
-                <Label>合計給与</Label>
-                <div className="h-10 px-3 py-2 rounded-md border bg-muted font-semibold text-lg">
-                  ¥{(
-                    (parseInt(form.baseSalary || "0", 10) || 0) +
-                    (parseInt(form.qualificationAllowance || "0", 10) || 0) +
-                    (parseInt(form.positionAllowance || "0", 10) || 0) +
-                    (parseInt(form.otherAllowance1Amount || "0", 10) || 0) +
-                    (parseInt(form.otherAllowance2Amount || "0", 10) || 0) +
-                    (parseInt(form.otherAllowance3Amount || "0", 10) || 0)
-                  ).toLocaleString()}
+              {can("company") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="companyId">所属</Label>
+                  <Select
+                    value={form.companyId}
+                    onValueChange={(value) => handleChange("companyId", value === "none" ? "" : value)}
+                    disabled={can("company") === "view"}
+                  >
+                    <SelectTrigger id="companyId">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">未設定</SelectItem>
+                      {companies.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
+              )}
+              {can("department") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="departmentId">部署</Label>
+                  <Select
+                    value={form.departmentId}
+                    onValueChange={(value) => handleChange("departmentId", value)}
+                    disabled={can("department") === "view"}
+                  >
+                    <SelectTrigger id="departmentId">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {can("position") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="positionId">役職</Label>
+                  <Select
+                    value={form.positionId}
+                    onValueChange={(value) => handleChange("positionId", value)}
+                    disabled={can("position") === "view"}
+                  >
+                    <SelectTrigger id="positionId">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map((pos) => (
+                        <SelectItem key={pos.id} value={pos.id}>
+                          {pos.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {can("jobType") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="jobTypeId">職種</Label>
+                  <Select
+                    value={form.jobTypeId}
+                    onValueChange={(value) => handleChange("jobTypeId", value === "none" ? "" : value)}
+                    disabled={can("jobType") === "view"}
+                  >
+                    <SelectTrigger id="jobTypeId">
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">未設定</SelectItem>
+                      {jobTypes.map((jt) => (
+                        <SelectItem key={jt.id} value={jt.id}>
+                          {jt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {can("grade") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="grade">等級</Label>
+                  <Input
+                    id="grade"
+                    type="number"
+                    min="1"
+                    value={form.grade}
+                    onChange={(e) => handleChange("grade", e.target.value)}
+                    placeholder="例: 3"
+                    disabled={can("grade") === "view"}
+                  />
+                </div>
+              )}
+              {can("salaryStep") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="salaryStep">号俸</Label>
+                  <Input
+                    id="salaryStep"
+                    type="number"
+                    min="1"
+                    value={form.salaryStep}
+                    onChange={(e) => handleChange("salaryStep", e.target.value)}
+                    placeholder="例: 5"
+                    disabled={can("salaryStep") === "view"}
+                  />
+                </div>
+              )}
+              {can("baseSalary") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="baseSalary">基本給</Label>
+                  <Input
+                    id="baseSalary"
+                    type="number"
+                    min="0"
+                    value={form.baseSalary}
+                    onChange={(e) => handleChange("baseSalary", e.target.value)}
+                    placeholder="例: 300000"
+                    disabled={can("baseSalary") === "view"}
+                  />
+                </div>
+              )}
+              {can("qualificationAllowance") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="qualificationAllowance">資格手当</Label>
+                  <Input
+                    id="qualificationAllowance"
+                    type="number"
+                    min="0"
+                    value={form.qualificationAllowance}
+                    onChange={(e) => handleChange("qualificationAllowance", e.target.value)}
+                    placeholder="例: 10000"
+                    disabled={can("qualificationAllowance") === "view"}
+                  />
+                </div>
+              )}
+              {can("positionAllowance") !== "hidden" && (
+                <div className="space-y-2">
+                  <Label htmlFor="positionAllowance">役職手当</Label>
+                  <Input
+                    id="positionAllowance"
+                    type="number"
+                    min="0"
+                    value={form.positionAllowance}
+                    onChange={(e) => handleChange("positionAllowance", e.target.value)}
+                    placeholder="例: 20000"
+                    disabled={can("positionAllowance") === "view"}
+                  />
+                </div>
+              )}
+              {/* その他手当1 */}
+              {can("otherAllowance1") !== "hidden" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance1Name">その他手当①（名称）</Label>
+                    <Input
+                      id="otherAllowance1Name"
+                      value={form.otherAllowance1Name}
+                      onChange={(e) => handleChange("otherAllowance1Name", e.target.value)}
+                      placeholder="例: 通勤手当"
+                      disabled={can("otherAllowance1") === "view"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance1Amount">その他手当①（金額）</Label>
+                    <Input
+                      id="otherAllowance1Amount"
+                      type="number"
+                      min="0"
+                      value={form.otherAllowance1Amount}
+                      onChange={(e) => handleChange("otherAllowance1Amount", e.target.value)}
+                      placeholder="例: 15000"
+                      disabled={can("otherAllowance1") === "view"}
+                    />
+                  </div>
+                </>
+              )}
+              {/* その他手当2 */}
+              {can("otherAllowance2") !== "hidden" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance2Name">その他手当②（名称）</Label>
+                    <Input
+                      id="otherAllowance2Name"
+                      value={form.otherAllowance2Name}
+                      onChange={(e) => handleChange("otherAllowance2Name", e.target.value)}
+                      placeholder="例: 住宅手当"
+                      disabled={can("otherAllowance2") === "view"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance2Amount">その他手当②（金額）</Label>
+                    <Input
+                      id="otherAllowance2Amount"
+                      type="number"
+                      min="0"
+                      value={form.otherAllowance2Amount}
+                      onChange={(e) => handleChange("otherAllowance2Amount", e.target.value)}
+                      placeholder="例: 20000"
+                      disabled={can("otherAllowance2") === "view"}
+                    />
+                  </div>
+                </>
+              )}
+              {/* その他手当3 */}
+              {can("otherAllowance3") !== "hidden" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance3Name">その他手当③（名称）</Label>
+                    <Input
+                      id="otherAllowance3Name"
+                      value={form.otherAllowance3Name}
+                      onChange={(e) => handleChange("otherAllowance3Name", e.target.value)}
+                      placeholder="例: 家族手当"
+                      disabled={can("otherAllowance3") === "view"}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="otherAllowance3Amount">その他手当③（金額）</Label>
+                    <Input
+                      id="otherAllowance3Amount"
+                      type="number"
+                      min="0"
+                      value={form.otherAllowance3Amount}
+                      onChange={(e) => handleChange("otherAllowance3Amount", e.target.value)}
+                      placeholder="例: 10000"
+                      disabled={can("otherAllowance3") === "view"}
+                    />
+                  </div>
+                </>
+              )}
+              {/* 合計給与（自動計算） */}
+              {showSalaryTotal && (
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>合計給与</Label>
+                  <div className="h-10 px-3 py-2 rounded-md border bg-muted font-semibold text-lg">
+                    ¥{salaryTotal.toLocaleString()}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="isActive">ステータス</Label>
                 <Select
@@ -669,171 +771,206 @@ export default function EditEmployeePage() {
           </Card>
 
           {/* 社会保険情報 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>社会保険情報</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              {/* 健康保険 */}
-              <div className="space-y-2">
-                <Label htmlFor="healthInsuranceNumber">健康保険番号</Label>
-                <Input
-                  id="healthInsuranceNumber"
-                  value={form.healthInsuranceNumber}
-                  onChange={(e) => handleChange("healthInsuranceNumber", e.target.value)}
-                  placeholder="例: 12345678"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="basicPensionNumber">基礎年金番号</Label>
-                <Input
-                  id="basicPensionNumber"
-                  value={form.basicPensionNumber}
-                  onChange={(e) => handleChange("basicPensionNumber", e.target.value)}
-                  placeholder="例: 1234-567890"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="healthInsuranceAcquiredDate">健康保険資格取得日</Label>
-                <Input
-                  id="healthInsuranceAcquiredDate"
-                  type="date"
-                  value={form.healthInsuranceAcquiredDate}
-                  onChange={(e) => handleChange("healthInsuranceAcquiredDate", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="healthInsuranceLostDate">健康保険資格喪失日</Label>
-                <Input
-                  id="healthInsuranceLostDate"
-                  type="date"
-                  value={form.healthInsuranceLostDate}
-                  onChange={(e) => handleChange("healthInsuranceLostDate", e.target.value)}
-                />
-              </div>
-              {/* 厚生年金 */}
-              <div className="space-y-2">
-                <Label htmlFor="pensionInsuranceNumber">厚生年金保険番号</Label>
-                <Input
-                  id="pensionInsuranceNumber"
-                  value={form.pensionInsuranceNumber}
-                  onChange={(e) => handleChange("pensionInsuranceNumber", e.target.value)}
-                  placeholder="例: 12345678"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employmentInsuranceNumber">雇用保険被保険者番号</Label>
-                <Input
-                  id="employmentInsuranceNumber"
-                  value={form.employmentInsuranceNumber}
-                  onChange={(e) => handleChange("employmentInsuranceNumber", e.target.value)}
-                  placeholder="例: 1234-567890-1"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pensionAcquiredDate">厚生年金資格取得日</Label>
-                <Input
-                  id="pensionAcquiredDate"
-                  type="date"
-                  value={form.pensionAcquiredDate}
-                  onChange={(e) => handleChange("pensionAcquiredDate", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pensionLostDate">厚生年金資格喪失日</Label>
-                <Input
-                  id="pensionLostDate"
-                  type="date"
-                  value={form.pensionLostDate}
-                  onChange={(e) => handleChange("pensionLostDate", e.target.value)}
-                />
-              </div>
-              {/* 雇用保険 */}
-              <div className="space-y-2">
-                <Label htmlFor="employmentInsuranceAcquiredDate">雇用保険資格取得日</Label>
-                <Input
-                  id="employmentInsuranceAcquiredDate"
-                  type="date"
-                  value={form.employmentInsuranceAcquiredDate}
-                  onChange={(e) => handleChange("employmentInsuranceAcquiredDate", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employmentInsuranceLostDate">雇用保険資格喪失日</Label>
-                <Input
-                  id="employmentInsuranceLostDate"
-                  type="date"
-                  value={form.employmentInsuranceLostDate}
-                  onChange={(e) => handleChange("employmentInsuranceLostDate", e.target.value)}
-                />
-              </div>
-              {/* 血液型 */}
-              <div className="space-y-2">
-                <Label htmlFor="bloodType">血液型</Label>
-                <Select
-                  value={form.bloodType}
-                  onValueChange={(value) => handleChange("bloodType", value)}
-                >
-                  <SelectTrigger id="bloodType">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">A型</SelectItem>
-                    <SelectItem value="B">B型</SelectItem>
-                    <SelectItem value="O">O型</SelectItem>
-                    <SelectItem value="AB">AB型</SelectItem>
-                    <SelectItem value="unknown">不明</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+          {showSocialInsuranceCard && (
+            <Card>
+              <CardHeader>
+                <CardTitle>社会保険情報</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                {/* 健康保険 */}
+                {can("healthInsurance") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="healthInsuranceNumber">健康保険番号</Label>
+                      <Input
+                        id="healthInsuranceNumber"
+                        value={form.healthInsuranceNumber}
+                        onChange={(e) => handleChange("healthInsuranceNumber", e.target.value)}
+                        placeholder="例: 12345678"
+                        disabled={can("healthInsurance") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="healthInsuranceAcquiredDate">健康保険資格取得日</Label>
+                      <Input
+                        id="healthInsuranceAcquiredDate"
+                        type="date"
+                        value={form.healthInsuranceAcquiredDate}
+                        onChange={(e) => handleChange("healthInsuranceAcquiredDate", e.target.value)}
+                        disabled={can("healthInsurance") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="healthInsuranceLostDate">健康保険資格喪失日</Label>
+                      <Input
+                        id="healthInsuranceLostDate"
+                        type="date"
+                        value={form.healthInsuranceLostDate}
+                        onChange={(e) => handleChange("healthInsuranceLostDate", e.target.value)}
+                        disabled={can("healthInsurance") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                {can("basicPensionNumber") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="basicPensionNumber">基礎年金番号</Label>
+                    <Input
+                      id="basicPensionNumber"
+                      value={form.basicPensionNumber}
+                      onChange={(e) => handleChange("basicPensionNumber", e.target.value)}
+                      placeholder="例: 1234-567890"
+                      disabled={can("basicPensionNumber") === "view"}
+                    />
+                  </div>
+                )}
+                {/* 厚生年金 */}
+                {can("pension") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionInsuranceNumber">厚生年金保険番号</Label>
+                      <Input
+                        id="pensionInsuranceNumber"
+                        value={form.pensionInsuranceNumber}
+                        onChange={(e) => handleChange("pensionInsuranceNumber", e.target.value)}
+                        placeholder="例: 12345678"
+                        disabled={can("pension") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionAcquiredDate">厚生年金資格取得日</Label>
+                      <Input
+                        id="pensionAcquiredDate"
+                        type="date"
+                        value={form.pensionAcquiredDate}
+                        onChange={(e) => handleChange("pensionAcquiredDate", e.target.value)}
+                        disabled={can("pension") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pensionLostDate">厚生年金資格喪失日</Label>
+                      <Input
+                        id="pensionLostDate"
+                        type="date"
+                        value={form.pensionLostDate}
+                        onChange={(e) => handleChange("pensionLostDate", e.target.value)}
+                        disabled={can("pension") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                {/* 雇用保険 */}
+                {can("employmentInsurance") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="employmentInsuranceNumber">雇用保険被保険者番号</Label>
+                      <Input
+                        id="employmentInsuranceNumber"
+                        value={form.employmentInsuranceNumber}
+                        onChange={(e) => handleChange("employmentInsuranceNumber", e.target.value)}
+                        placeholder="例: 1234-567890-1"
+                        disabled={can("employmentInsurance") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="employmentInsuranceAcquiredDate">雇用保険資格取得日</Label>
+                      <Input
+                        id="employmentInsuranceAcquiredDate"
+                        type="date"
+                        value={form.employmentInsuranceAcquiredDate}
+                        onChange={(e) => handleChange("employmentInsuranceAcquiredDate", e.target.value)}
+                        disabled={can("employmentInsurance") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="employmentInsuranceLostDate">雇用保険資格喪失日</Label>
+                      <Input
+                        id="employmentInsuranceLostDate"
+                        type="date"
+                        value={form.employmentInsuranceLostDate}
+                        onChange={(e) => handleChange("employmentInsuranceLostDate", e.target.value)}
+                        disabled={can("employmentInsurance") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                {/* 血液型 */}
+                {can("bloodType") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="bloodType">血液型</Label>
+                    <Select
+                      value={form.bloodType}
+                      onValueChange={(value) => handleChange("bloodType", value)}
+                      disabled={can("bloodType") === "view"}
+                    >
+                      <SelectTrigger id="bloodType">
+                        <SelectValue placeholder="選択してください" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A">A型</SelectItem>
+                        <SelectItem value="B">B型</SelectItem>
+                        <SelectItem value="O">O型</SelectItem>
+                        <SelectItem value="AB">AB型</SelectItem>
+                        <SelectItem value="unknown">不明</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* 緊急連絡先 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>緊急連絡先</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContactName">氏名</Label>
-                <Input
-                  id="emergencyContactName"
-                  value={form.emergencyContactName}
-                  onChange={(e) => handleChange("emergencyContactName", e.target.value)}
-                  placeholder="例: 山田 花子"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContactRelationship">続柄</Label>
-                <Input
-                  id="emergencyContactRelationship"
-                  value={form.emergencyContactRelationship}
-                  onChange={(e) => handleChange("emergencyContactRelationship", e.target.value)}
-                  placeholder="例: 配偶者"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContactPhone">電話番号</Label>
-                <Input
-                  id="emergencyContactPhone"
-                  type="tel"
-                  value={form.emergencyContactPhone}
-                  onChange={(e) => handleChange("emergencyContactPhone", e.target.value)}
-                  placeholder="例: 090-1234-5678"
-                />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="emergencyContactAddress">住所</Label>
-                <Input
-                  id="emergencyContactAddress"
-                  value={form.emergencyContactAddress}
-                  onChange={(e) => handleChange("emergencyContactAddress", e.target.value)}
-                  placeholder="例: 東京都渋谷区..."
-                />
-              </div>
-            </CardContent>
-          </Card>
+          {can("emergencyContact") !== "hidden" && (
+            <Card>
+              <CardHeader>
+                <CardTitle>緊急連絡先</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactName">氏名</Label>
+                  <Input
+                    id="emergencyContactName"
+                    value={form.emergencyContactName}
+                    onChange={(e) => handleChange("emergencyContactName", e.target.value)}
+                    placeholder="例: 山田 花子"
+                    disabled={can("emergencyContact") === "view"}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactRelationship">続柄</Label>
+                  <Input
+                    id="emergencyContactRelationship"
+                    value={form.emergencyContactRelationship}
+                    onChange={(e) => handleChange("emergencyContactRelationship", e.target.value)}
+                    placeholder="例: 配偶者"
+                    disabled={can("emergencyContact") === "view"}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactPhone">電話番号</Label>
+                  <Input
+                    id="emergencyContactPhone"
+                    type="tel"
+                    value={form.emergencyContactPhone}
+                    onChange={(e) => handleChange("emergencyContactPhone", e.target.value)}
+                    placeholder="例: 090-1234-5678"
+                    disabled={can("emergencyContact") === "view"}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="emergencyContactAddress">住所</Label>
+                  <Input
+                    id="emergencyContactAddress"
+                    value={form.emergencyContactAddress}
+                    onChange={(e) => handleChange("emergencyContactAddress", e.target.value)}
+                    placeholder="例: 東京都渋谷区..."
+                    disabled={can("emergencyContact") === "view"}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Error and Submit */}
           {error && (

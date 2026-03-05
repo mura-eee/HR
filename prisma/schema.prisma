@@ -233,6 +233,18 @@ model CompetencyEvaluation {
   @@unique([evaluationId, competencyItemId])
 }
 
+model FieldPermission {
+  id         String   @id @default(cuid())
+  targetType String   // "user" | "company" | "department" | "position" | "jobType"
+  targetId   String
+  fieldKey   String
+  level      String   // "edit" | "view" | "hidden"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([targetType, targetId, fieldKey])
+}
+
 model KpiGoal {
   id           String     @id @default(cuid())
   evaluationId String

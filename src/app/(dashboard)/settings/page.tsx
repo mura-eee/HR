@@ -47,7 +47,9 @@ import {
   Briefcase,
   Calendar,
   BarChart3,
+  Shield,
 } from "lucide-react";
+import { PermissionsTab } from "@/components/settings/PermissionsTab";
 
 // ===== Types =====
 
@@ -734,6 +736,10 @@ export default function SettingsPage() {
             <Briefcase className="w-4 h-4" />
             職種
           </TabsTrigger>
+          <TabsTrigger value="permissions" className="gap-1">
+            <Shield className="w-4 h-4" />
+            権限設定
+          </TabsTrigger>
         </TabsList>
 
         {/* ===== ユーザー管理 Tab ===== */}
@@ -1199,6 +1205,11 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ===== 権限設定 Tab ===== */}
+        <TabsContent value="permissions">
+          <PermissionsTab />
         </TabsContent>
       </Tabs>
 

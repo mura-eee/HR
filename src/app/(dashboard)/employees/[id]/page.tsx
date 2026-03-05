@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -160,6 +161,7 @@ export default function EmployeeDetailPage() {
   const router = useRouter();
   const id = params.id as string;
 
+  const { can } = useFieldPermissions();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -304,59 +306,60 @@ export default function EmployeeDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">氏名</p>
-                    <p className="font-medium">
-                      {employee.lastName} {employee.firstName}
-                    </p>
+                {(can("name") !== "hidden" || can("nameKana") !== "hidden") && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {can("name") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">氏名</p>
+                        <p className="font-medium">{employee.lastName} {employee.firstName}</p>
+                      </div>
+                    )}
+                    {can("nameKana") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">氏名（カナ）</p>
+                        <p className="font-medium">
+                          {employee.lastNameKana && employee.firstNameKana
+                            ? `${employee.lastNameKana} ${employee.firstNameKana}`
+                            : "-"}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      氏名（カナ）
-                    </p>
-                    <p className="font-medium">
-                      {employee.lastNameKana && employee.firstNameKana
-                        ? `${employee.lastNameKana} ${employee.firstNameKana}`
-                        : "-"}
-                    </p>
+                )}
+                {(can("gender") !== "hidden" || can("birthDate") !== "hidden") && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {can("gender") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">性別</p>
+                        <p className="font-medium">{getGenderLabel(employee.gender)}</p>
+                      </div>
+                    )}
+                    {can("birthDate") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">生年月日</p>
+                        <p className="font-medium">{formatDate(employee.birthDate)}</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+                )}
+                {can("email") !== "hidden" && (
                   <div>
-                    <p className="text-sm text-muted-foreground">性別</p>
-                    <p className="font-medium">
-                      {getGenderLabel(employee.gender)}
-                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />メールアドレス</p>
+                    <p className="font-medium">{employee.email}</p>
                   </div>
+                )}
+                {can("phone") !== "hidden" && (
                   <div>
-                    <p className="text-sm text-muted-foreground">生年月日</p>
-                    <p className="font-medium">
-                      {formatDate(employee.birthDate)}
-                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />電話番号</p>
+                    <p className="font-medium">{employee.phone || "-"}</p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    メールアドレス
-                  </p>
-                  <p className="font-medium">{employee.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
-                    電話番号
-                  </p>
-                  <p className="font-medium">{employee.phone || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    住所
-                  </p>
-                  <p className="font-medium">{employee.address || "-"}</p>
-                </div>
+                )}
+                {can("address") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />住所</p>
+                    <p className="font-medium">{employee.address || "-"}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -369,84 +372,83 @@ export default function EmployeeDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    入社日
-                  </p>
-                  <p className="font-medium">{formatDate(employee.hireDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
-                    所属
-                  </p>
-                  <p className="font-medium">{employee.company?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
-                    部署
-                  </p>
-                  <p className="font-medium">{employee.department?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Briefcase className="h-3 w-3" />
-                    役職
-                  </p>
-                  <p className="font-medium">{employee.position?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Briefcase className="h-3 w-3" />
-                    職種
-                  </p>
-                  <p className="font-medium">{employee.jobType?.name || "-"}</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+                {can("hireDate") !== "hidden" && (
                   <div>
-                    <p className="text-sm text-muted-foreground">等級</p>
-                    <p className="font-medium">
-                      {employee.grade !== null
-                        ? `${employee.grade}等級`
-                        : "-"}
-                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Calendar className="h-3 w-3" />入社日</p>
+                    <p className="font-medium">{formatDate(employee.hireDate)}</p>
                   </div>
+                )}
+                {can("company") !== "hidden" && (
                   <div>
-                    <p className="text-sm text-muted-foreground">号俸</p>
-                    <p className="font-medium">
-                      {employee.salaryStep !== null
-                        ? `${employee.salaryStep}号`
-                        : "-"}
-                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" />所属</p>
+                    <p className="font-medium">{employee.company?.name || "-"}</p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">基本給</p>
-                  <p className="font-medium">{formatCurrency(employee.baseSalary)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">資格手当</p>
-                  <p className="font-medium">{formatCurrency(employee.qualificationAllowance)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">役職手当</p>
-                  <p className="font-medium">{formatCurrency(employee.positionAllowance)}</p>
-                </div>
-                {employee.otherAllowance1Name && (
+                )}
+                {can("department") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" />部署</p>
+                    <p className="font-medium">{employee.department?.name || "-"}</p>
+                  </div>
+                )}
+                {can("position") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />役職</p>
+                    <p className="font-medium">{employee.position?.name || "-"}</p>
+                  </div>
+                )}
+                {can("jobType") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />職種</p>
+                    <p className="font-medium">{employee.jobType?.name || "-"}</p>
+                  </div>
+                )}
+                {(can("grade") !== "hidden" || can("salaryStep") !== "hidden") && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {can("grade") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">等級</p>
+                        <p className="font-medium">{employee.grade !== null ? `${employee.grade}等級` : "-"}</p>
+                      </div>
+                    )}
+                    {can("salaryStep") !== "hidden" && (
+                      <div>
+                        <p className="text-sm text-muted-foreground">号俸</p>
+                        <p className="font-medium">{employee.salaryStep !== null ? `${employee.salaryStep}号` : "-"}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {can("baseSalary") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">基本給</p>
+                    <p className="font-medium">{formatCurrency(employee.baseSalary)}</p>
+                  </div>
+                )}
+                {can("qualificationAllowance") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">資格手当</p>
+                    <p className="font-medium">{formatCurrency(employee.qualificationAllowance)}</p>
+                  </div>
+                )}
+                {can("positionAllowance") !== "hidden" && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">役職手当</p>
+                    <p className="font-medium">{formatCurrency(employee.positionAllowance)}</p>
+                  </div>
+                )}
+                {can("otherAllowance1") !== "hidden" && employee.otherAllowance1Name && (
                   <div>
                     <p className="text-sm text-muted-foreground">{employee.otherAllowance1Name}</p>
                     <p className="font-medium">{formatCurrency(employee.otherAllowance1Amount)}</p>
                   </div>
                 )}
-                {employee.otherAllowance2Name && (
+                {can("otherAllowance2") !== "hidden" && employee.otherAllowance2Name && (
                   <div>
                     <p className="text-sm text-muted-foreground">{employee.otherAllowance2Name}</p>
                     <p className="font-medium">{formatCurrency(employee.otherAllowance2Amount)}</p>
                   </div>
                 )}
-                {employee.otherAllowance3Name && (
+                {can("otherAllowance3") !== "hidden" && employee.otherAllowance3Name && (
                   <div>
                     <p className="text-sm text-muted-foreground">{employee.otherAllowance3Name}</p>
                     <p className="font-medium">{formatCurrency(employee.otherAllowance3Amount)}</p>
@@ -456,12 +458,12 @@ export default function EmployeeDetailPage() {
                   <p className="text-sm text-muted-foreground">合計給与</p>
                   <p className="font-bold text-lg">
                     {formatCurrency(
-                      (employee.baseSalary || 0) +
-                      (employee.qualificationAllowance || 0) +
-                      (employee.positionAllowance || 0) +
-                      (employee.otherAllowance1Amount || 0) +
-                      (employee.otherAllowance2Amount || 0) +
-                      (employee.otherAllowance3Amount || 0)
+                      (can("baseSalary") !== "hidden" ? (employee.baseSalary || 0) : 0) +
+                      (can("qualificationAllowance") !== "hidden" ? (employee.qualificationAllowance || 0) : 0) +
+                      (can("positionAllowance") !== "hidden" ? (employee.positionAllowance || 0) : 0) +
+                      (can("otherAllowance1") !== "hidden" ? (employee.otherAllowance1Amount || 0) : 0) +
+                      (can("otherAllowance2") !== "hidden" ? (employee.otherAllowance2Amount || 0) : 0) +
+                      (can("otherAllowance3") !== "hidden" ? (employee.otherAllowance3Amount || 0) : 0)
                     )}
                   </p>
                 </div>
@@ -470,98 +472,66 @@ export default function EmployeeDetailPage() {
           </div>
 
           {/* 社会保険情報 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5" />
-                社会保険情報
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">健康保険番号</p>
-                  <p className="font-medium">{employee.healthInsuranceNumber || "-"}</p>
+          {(can("healthInsurance") !== "hidden" || can("pension") !== "hidden" || can("basicPensionNumber") !== "hidden" || can("employmentInsurance") !== "hidden" || can("bloodType") !== "hidden") && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Shield className="h-5 w-5" />
+                  社会保険情報
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
+                  {can("healthInsurance") !== "hidden" && <>
+                    <div><p className="text-sm text-muted-foreground">健康保険番号</p><p className="font-medium">{employee.healthInsuranceNumber || "-"}</p></div>
+                    <div><p className="text-sm text-muted-foreground">健康保険資格取得日</p><p className="font-medium">{formatDate(employee.healthInsuranceAcquiredDate)}</p></div>
+                    <div><p className="text-sm text-muted-foreground">健康保険資格喪失日</p><p className="font-medium">{formatDate(employee.healthInsuranceLostDate)}</p></div>
+                  </>}
+                  {can("pension") !== "hidden" && <>
+                    <div><p className="text-sm text-muted-foreground">厚生年金保険番号</p><p className="font-medium">{employee.pensionInsuranceNumber || "-"}</p></div>
+                    <div><p className="text-sm text-muted-foreground">厚生年金資格取得日</p><p className="font-medium">{formatDate(employee.pensionAcquiredDate)}</p></div>
+                    <div><p className="text-sm text-muted-foreground">厚生年金資格喪失日</p><p className="font-medium">{formatDate(employee.pensionLostDate)}</p></div>
+                  </>}
+                  {can("basicPensionNumber") !== "hidden" && (
+                    <div><p className="text-sm text-muted-foreground">基礎年金番号</p><p className="font-medium">{employee.basicPensionNumber || "-"}</p></div>
+                  )}
+                  {can("employmentInsurance") !== "hidden" && <>
+                    <div><p className="text-sm text-muted-foreground">雇用保険資格取得日</p><p className="font-medium">{formatDate(employee.employmentInsuranceAcquiredDate)}</p></div>
+                    <div><p className="text-sm text-muted-foreground">雇用保険資格喪失日</p><p className="font-medium">{formatDate(employee.employmentInsuranceLostDate)}</p></div>
+                    <div><p className="text-sm text-muted-foreground">雇用保険被保険者番号</p><p className="font-medium">{employee.employmentInsuranceNumber || "-"}</p></div>
+                  </>}
+                  {can("bloodType") !== "hidden" && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">血液型</p>
+                      <p className="font-medium">
+                        {employee.bloodType ? (employee.bloodType === "unknown" ? "不明" : `${employee.bloodType}型`) : "-"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">健康保険資格取得日</p>
-                  <p className="font-medium">{formatDate(employee.healthInsuranceAcquiredDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">健康保険資格喪失日</p>
-                  <p className="font-medium">{formatDate(employee.healthInsuranceLostDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">厚生年金保険番号</p>
-                  <p className="font-medium">{employee.pensionInsuranceNumber || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">厚生年金資格取得日</p>
-                  <p className="font-medium">{formatDate(employee.pensionAcquiredDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">厚生年金資格喪失日</p>
-                  <p className="font-medium">{formatDate(employee.pensionLostDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">基礎年金番号</p>
-                  <p className="font-medium">{employee.basicPensionNumber || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">雇用保険資格取得日</p>
-                  <p className="font-medium">{formatDate(employee.employmentInsuranceAcquiredDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">雇用保険資格喪失日</p>
-                  <p className="font-medium">{formatDate(employee.employmentInsuranceLostDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">雇用保険被保険者番号</p>
-                  <p className="font-medium">{employee.employmentInsuranceNumber || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">血液型</p>
-                  <p className="font-medium">
-                    {employee.bloodType
-                      ? employee.bloodType === "unknown"
-                        ? "不明"
-                        : `${employee.bloodType}型`
-                      : "-"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 緊急連絡先 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Heart className="h-5 w-5" />
-                緊急連絡先
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">氏名</p>
-                  <p className="font-medium">{employee.emergencyContactName || "-"}</p>
+          {can("emergencyContact") !== "hidden" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Heart className="h-5 w-5" />
+                  緊急連絡先
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
+                  <div><p className="text-sm text-muted-foreground">氏名</p><p className="font-medium">{employee.emergencyContactName || "-"}</p></div>
+                  <div><p className="text-sm text-muted-foreground">続柄</p><p className="font-medium">{employee.emergencyContactRelationship || "-"}</p></div>
+                  <div><p className="text-sm text-muted-foreground">電話番号</p><p className="font-medium">{employee.emergencyContactPhone || "-"}</p></div>
+                  <div className="sm:col-span-2 md:col-span-4"><p className="text-sm text-muted-foreground">住所</p><p className="font-medium">{employee.emergencyContactAddress || "-"}</p></div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">続柄</p>
-                  <p className="font-medium">{employee.emergencyContactRelationship || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">電話番号</p>
-                  <p className="font-medium">{employee.emergencyContactPhone || "-"}</p>
-                </div>
-                <div className="sm:col-span-2 md:col-span-4">
-                  <p className="text-sm text-muted-foreground">住所</p>
-                  <p className="font-medium">{employee.emergencyContactAddress || "-"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Qualifications Tab */}

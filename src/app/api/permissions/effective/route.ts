@@ -1,0 +1,68 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { ALL_FIELDS, TARGET_PRIORITY, PermissionLevel } from "@/lib/field-permissions";
+
+// GET /api/permissions/effective
+// 現在ログイン中のユーザーの実効権限を計算して返す
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user?.email ?? "" },
+    include: {
+      employee: {
+        select: {
+          companyId: true,
+          departmentId: true,
+          positionId: true,
+          jobTypeId: true,
+        },
+      },
+    },
+  });
+
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // ADMINは全て編集可能
+  if (user.role === "ADMIN") {
+    const all: Record<string, PermissionLevel> = {};
+    for (const f of ALL_FIELDS) all[f.key] = "edit";
+    return NextResponse.json({ permissions: all });
+  }
+
+  // 対象リストを優先度順に構築
+  const targets: { type: string; id: string }[] = [
+    { type: "user", id: user.id },
+  ];
+  if (user.employee?.companyId)    targets.push({ type: "company",    id: user.employee.companyId });
+  if (user.employee?.departmentId) targets.push({ type: "department", id: user.employee.departmentId });
+  if (user.employee?.positionId)   targets.push({ type: "position",   id: user.employee.positionId });
+  if (user.employee?.jobTypeId)    targets.push({ type: "jobType",    id: user.employee.jobTypeId });
+
+  // 全対象の権限を一括取得
+  const allPerms = await prisma.fieldPermission.findMany({
+    where: {
+      OR: targets.map((t) => ({ targetType: t.type, targetId: t.id })),
+    },
+  });
+
+  // 低優先度から高優先度の順で上書き（最終的に高優先度が残る）
+  const effective: Record<string, PermissionLevel> = {};
+  for (const f of ALL_FIELDS) effective[f.key] = "edit"; // デフォルト: 編集可能
+
+  for (const targetType of [...TARGET_PRIORITY].reverse()) {
+    const target = targets.find((t) => t.type === targetType);
+    if (!target) continue;
+    const perms = allPerms.filter(
+      (p) => p.targetType === targetType && p.targetId === target.id
+    );
+    for (const perm of perms) {
+      effective[perm.fieldKey] = perm.level as PermissionLevel;
+    }
+  }
+
+  return NextResponse.json({ permissions: effective });
+}
