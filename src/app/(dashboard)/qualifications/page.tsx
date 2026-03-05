@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -100,9 +101,12 @@ function getExpiryStatus(expiryDate: string | null): "expired" | "soon" | "valid
 
 // --- Main Component ---
 
-export default function QualificationsPage() {
+function QualificationsContent() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState("master");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") === "employee" ? "employee" : "master"
+  );
 
   // Qualification master state
   const [qualifications, setQualifications] = useState<Qualification[]>([]);
@@ -125,7 +129,9 @@ export default function QualificationsPage() {
 
   // Filter state
   const [filterEmployeeId, setFilterEmployeeId] = useState("");
-  const [filterQualificationId, setFilterQualificationId] = useState("");
+  const [filterQualificationId, setFilterQualificationId] = useState(
+    searchParams.get("qualificationId") || ""
+  );
 
   // Employee list for selects
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -196,6 +202,14 @@ export default function QualificationsPage() {
       fetchEmployeeQualifications();
     }
   }, [activeTab, fetchEmployeeQualifications]);
+
+  // URLパラメータでemployeeタブ指定時は初回マウント時にも取得
+  useEffect(() => {
+    if (searchParams.get("tab") === "employee") {
+      fetchEmployeeQualifications();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // --- Qualification Master CRUD ---
 
@@ -868,5 +882,13 @@ export default function QualificationsPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function QualificationsPage() {
+  return (
+    <Suspense>
+      <QualificationsContent />
+    </Suspense>
   );
 }

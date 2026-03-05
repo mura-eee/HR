@@ -595,7 +595,12 @@ export default function EmployeeDetailPage() {
                         return (
                           <TableRow key={eq.id}>
                             <TableCell className="font-medium">
-                              {eq.qualification.name}
+                              <Link
+                                href={`/qualifications?tab=employee&qualificationId=${eq.qualification.id}`}
+                                className="text-blue-600 hover:underline"
+                              >
+                                {eq.qualification.name}
+                              </Link>
                             </TableCell>
                             <TableCell>
                               {eq.qualification.category || "-"}
