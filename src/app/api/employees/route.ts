@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const departmentId = searchParams.get("departmentId") || "";
+    const companyId = searchParams.get("companyId") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const sortField = searchParams.get("sortField") || "employeeCode";
@@ -39,6 +40,10 @@ export async function GET(request: NextRequest) {
       where.departmentId = departmentId;
     }
 
+    if (companyId) {
+      where.companyId = companyId;
+    }
+
     if (isActive !== null && isActive !== undefined && isActive !== "") {
       where.isActive = isActive === "true";
     }
@@ -61,8 +66,10 @@ export async function GET(request: NextRequest) {
       prisma.employee.findMany({
         where,
         include: {
+          company: { select: { id: true, name: true } },
           department: { select: { id: true, name: true, code: true } },
           position: { select: { id: true, name: true, level: true } },
+          jobType: { select: { id: true, name: true } },
         },
         orderBy: { [orderByField]: orderByDirection },
         skip,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useCompany } from "@/components/providers/company-provider";
 import {
   Card,
   CardContent,
@@ -34,13 +35,17 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const { selectedCompanyId } = useCompany();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/dashboard");
+        const url = selectedCompanyId
+          ? `/api/dashboard?companyId=${selectedCompanyId}`
+          : "/api/dashboard";
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setStats(data);
@@ -52,7 +57,7 @@ export default function DashboardPage() {
       }
     }
     fetchStats();
-  }, []);
+  }, [selectedCompanyId]);
 
   const statusLabels: Record<string, string> = {
     DRAFT: "下書き",

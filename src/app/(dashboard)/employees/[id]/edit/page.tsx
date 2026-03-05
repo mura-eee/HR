@@ -28,6 +28,17 @@ interface Position {
   level: number;
 }
 
+interface Company {
+  id: string;
+  name: string;
+  code: string;
+}
+
+interface JobType {
+  id: string;
+  name: string;
+}
+
 function formatDateForInput(dateStr: string | null): string {
   if (!dateStr) return "";
   const date = new Date(dateStr);
@@ -44,6 +55,8 @@ export default function EditEmployeePage() {
 
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [jobTypes, setJobTypes] = useState<JobType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -60,8 +73,10 @@ export default function EditEmployeePage() {
     birthDate: "",
     gender: "",
     address: "",
+    companyId: "",
     departmentId: "",
     positionId: "",
+    jobTypeId: "",
     grade: "",
     salaryStep: "",
     baseSalary: "",
@@ -116,8 +131,10 @@ export default function EditEmployeePage() {
         birthDate: formatDateForInput(data.birthDate),
         gender: data.gender || "",
         address: data.address || "",
+        companyId: data.companyId || "",
         departmentId: data.departmentId || "",
         positionId: data.positionId || "",
+        jobTypeId: data.jobTypeId || "",
         grade: data.grade !== null && data.grade !== undefined ? String(data.grade) : "",
         salaryStep:
           data.salaryStep !== null && data.salaryStep !== undefined
@@ -177,21 +194,27 @@ export default function EditEmployeePage() {
 
   const fetchMasterData = useCallback(async () => {
     try {
-      const [deptRes, posRes] = await Promise.all([
+      const [deptRes, posRes, compRes, jtRes] = await Promise.all([
         fetch("/api/departments"),
         fetch("/api/positions"),
+        fetch("/api/companies"),
+        fetch("/api/job-types"),
       ]);
       if (deptRes.ok) {
         const deptData = await deptRes.json();
-        setDepartments(
-          Array.isArray(deptData) ? deptData : deptData.departments || []
-        );
+        setDepartments(Array.isArray(deptData) ? deptData : deptData.departments || []);
       }
       if (posRes.ok) {
         const posData = await posRes.json();
-        setPositions(
-          Array.isArray(posData) ? posData : posData.positions || []
-        );
+        setPositions(Array.isArray(posData) ? posData : posData.positions || []);
+      }
+      if (compRes.ok) {
+        const compData = await compRes.json();
+        setCompanies(compData.companies || []);
+      }
+      if (jtRes.ok) {
+        const jtData = await jtRes.json();
+        setJobTypes(jtData.jobTypes || []);
       }
     } catch (err) {
       console.error("マスタデータ取得エラー:", err);
@@ -419,6 +442,44 @@ export default function EditEmployeePage() {
               <CardTitle>所属・給与情報</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="companyId">所属</Label>
+                <Select
+                  value={form.companyId}
+                  onValueChange={(value) => handleChange("companyId", value === "none" ? "" : value)}
+                >
+                  <SelectTrigger id="companyId">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">未設定</SelectItem>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jobTypeId">職種</Label>
+                <Select
+                  value={form.jobTypeId}
+                  onValueChange={(value) => handleChange("jobTypeId", value === "none" ? "" : value)}
+                >
+                  <SelectTrigger id="jobTypeId">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">未設定</SelectItem>
+                    {jobTypes.map((jt) => (
+                      <SelectItem key={jt.id} value={jt.id}>
+                        {jt.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="departmentId">部署</Label>
                 <Select

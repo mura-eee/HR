@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useCompany } from "@/components/providers/company-provider";
 import {
   Card,
   CardContent,
@@ -347,13 +348,17 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
 // ---------------------------------------------------------------------------
 
 export default function OrganizationPage() {
+  const { selectedCompanyId } = useCompany();
   const [departments, setDepartments] = useState<DepartmentNode[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchOrganization() {
       try {
-        const res = await fetch("/api/organizations");
+        const url = selectedCompanyId
+          ? `/api/organizations?companyId=${selectedCompanyId}`
+          : "/api/organizations";
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           setDepartments(data.departments);
@@ -365,7 +370,7 @@ export default function OrganizationPage() {
       }
     }
     fetchOrganization();
-  }, []);
+  }, [selectedCompanyId]);
 
   if (loading) {
     return (

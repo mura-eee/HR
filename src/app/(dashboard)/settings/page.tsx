@@ -573,6 +573,90 @@ export default function SettingsPage() {
     }
   };
 
+  // ---------- Companies ----------
+
+  const [companies, setCompanies] = useState<{ id: string; name: string; code: string; isActive: boolean; sortOrder: number; _count?: { employees: number } }[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  type CompanyItem = { id: string; name: string; code: string; isActive: boolean; sortOrder: number; _count?: { employees: number } };
+  const [companyDialogOpen, setCompanyDialogOpen] = useState(false);
+  const [editingCompany, setEditingCompany] = useState<CompanyItem | null>(null);
+  const [companyForm, setCompanyForm] = useState({ name: "", code: "", sortOrder: "0" });
+
+  const fetchCompanies = useCallback(async () => {
+    setLoadingCompanies(true);
+    try {
+      const res = await fetch("/api/companies");
+      if (res.ok) { const data = await res.json(); setCompanies(data.companies || []); }
+    } catch (e) { console.error(e); } finally { setLoadingCompanies(false); }
+  }, []);
+
+  const openCompanyDialog = (company?: CompanyItem) => {
+    setEditingCompany(company || null);
+    setCompanyForm(company ? { name: company.name, code: company.code, sortOrder: String(company.sortOrder) } : { name: "", code: "", sortOrder: "0" });
+    setCompanyDialogOpen(true);
+  };
+
+  const saveCompany = async () => {
+    try {
+      const method = editingCompany ? "PUT" : "POST";
+      const url = editingCompany ? `/api/companies/${editingCompany.id}` : "/api/companies";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(companyForm) });
+      if (res.ok) { setCompanyDialogOpen(false); fetchCompanies(); }
+      else { const d = await res.json(); alert(d.error || "保存に失敗しました"); }
+    } catch (e) { console.error(e); alert("保存に失敗しました"); }
+  };
+
+  const deleteCompany = async (id: string) => {
+    if (!confirm("この所属企業を削除しますか？")) return;
+    try {
+      const res = await fetch(`/api/companies/${id}`, { method: "DELETE" });
+      if (res.ok) { fetchCompanies(); }
+      else { const d = await res.json(); alert(d.error || "削除に失敗しました"); }
+    } catch (e) { console.error(e); alert("削除に失敗しました"); }
+  };
+
+  // ---------- JobTypes ----------
+
+  const [jobTypes, setJobTypes] = useState<{ id: string; name: string; sortOrder: number; _count?: { employees: number } }[]>([]);
+  const [loadingJobTypes, setLoadingJobTypes] = useState(true);
+  type JobTypeItem = { id: string; name: string; sortOrder: number; _count?: { employees: number } };
+  const [jobTypeDialogOpen, setJobTypeDialogOpen] = useState(false);
+  const [editingJobType, setEditingJobType] = useState<JobTypeItem | null>(null);
+  const [jobTypeForm, setJobTypeForm] = useState({ name: "", sortOrder: "0" });
+
+  const fetchJobTypes = useCallback(async () => {
+    setLoadingJobTypes(true);
+    try {
+      const res = await fetch("/api/job-types");
+      if (res.ok) { const data = await res.json(); setJobTypes(data.jobTypes || []); }
+    } catch (e) { console.error(e); } finally { setLoadingJobTypes(false); }
+  }, []);
+
+  const openJobTypeDialog = (jt?: JobTypeItem) => {
+    setEditingJobType(jt || null);
+    setJobTypeForm(jt ? { name: jt.name, sortOrder: String(jt.sortOrder) } : { name: "", sortOrder: "0" });
+    setJobTypeDialogOpen(true);
+  };
+
+  const saveJobType = async () => {
+    try {
+      const method = editingJobType ? "PUT" : "POST";
+      const url = editingJobType ? `/api/job-types/${editingJobType.id}` : "/api/job-types";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(jobTypeForm) });
+      if (res.ok) { setJobTypeDialogOpen(false); fetchJobTypes(); }
+      else { const d = await res.json(); alert(d.error || "保存に失敗しました"); }
+    } catch (e) { console.error(e); alert("保存に失敗しました"); }
+  };
+
+  const deleteJobType = async (id: string) => {
+    if (!confirm("この職種を削除しますか？")) return;
+    try {
+      const res = await fetch(`/api/job-types/${id}`, { method: "DELETE" });
+      if (res.ok) { fetchJobTypes(); }
+      else { const d = await res.json(); alert(d.error || "削除に失敗しました"); }
+    } catch (e) { console.error(e); alert("削除に失敗しました"); }
+  };
+
   // ---------- Effects ----------
 
   useEffect(() => {
@@ -582,8 +666,10 @@ export default function SettingsPage() {
       fetchPositions();
       fetchPeriods();
       fetchCompetencyItems();
+      fetchCompanies();
+      fetchJobTypes();
     }
-  }, [session, fetchUsersData, fetchDepartments, fetchPositions, fetchPeriods, fetchCompetencyItems]);
+  }, [session, fetchUsersData, fetchDepartments, fetchPositions, fetchPeriods, fetchCompetencyItems, fetchCompanies, fetchJobTypes]);
 
   // ---------- Guard ----------
 
@@ -639,6 +725,14 @@ export default function SettingsPage() {
           <TabsTrigger value="competency" className="gap-1">
             <BarChart3 className="w-4 h-4" />
             コンピテンシー項目
+          </TabsTrigger>
+          <TabsTrigger value="companies" className="gap-1">
+            <Building2 className="w-4 h-4" />
+            所属企業
+          </TabsTrigger>
+          <TabsTrigger value="jobTypes" className="gap-1">
+            <Briefcase className="w-4 h-4" />
+            職種
           </TabsTrigger>
         </TabsList>
 
@@ -1014,7 +1108,145 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ===== 所属企業 Tab ===== */}
+        <TabsContent value="companies">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>所属企業管理</CardTitle>
+              <Button size="sm" onClick={() => openCompanyDialog()}>
+                <Plus className="w-4 h-4 mr-1" /> 追加
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingCompanies ? (
+                <div className="h-32 animate-pulse bg-gray-100 rounded" />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>会社名</TableHead>
+                      <TableHead>コード</TableHead>
+                      <TableHead>社員数</TableHead>
+                      <TableHead>順序</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companies.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">登録されていません</TableCell></TableRow>
+                    ) : companies.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.name}</TableCell>
+                        <TableCell>{c.code}</TableCell>
+                        <TableCell>{c._count?.employees ?? 0}名</TableCell>
+                        <TableCell>{c.sortOrder}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openCompanyDialog(c)}><Pencil className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => deleteCompany(c.id)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ===== 職種 Tab ===== */}
+        <TabsContent value="jobTypes">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>職種管理</CardTitle>
+              <Button size="sm" onClick={() => openJobTypeDialog()}>
+                <Plus className="w-4 h-4 mr-1" /> 追加
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingJobTypes ? (
+                <div className="h-32 animate-pulse bg-gray-100 rounded" />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>職種名</TableHead>
+                      <TableHead>社員数</TableHead>
+                      <TableHead>順序</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobTypes.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">登録されていません</TableCell></TableRow>
+                    ) : jobTypes.map((jt) => (
+                      <TableRow key={jt.id}>
+                        <TableCell className="font-medium">{jt.name}</TableCell>
+                        <TableCell>{jt._count?.employees ?? 0}名</TableCell>
+                        <TableCell>{jt.sortOrder}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openJobTypeDialog(jt)}><Pencil className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => deleteJobType(jt.id)}><Trash2 className="w-4 h-4" /></Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* ===== Company Dialog ===== */}
+      <Dialog open={companyDialogOpen} onOpenChange={setCompanyDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingCompany ? "所属企業を編集" : "所属企業を追加"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>会社名 *</Label>
+              <Input value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} placeholder="例: 株式会社トキト" />
+            </div>
+            <div className="space-y-2">
+              <Label>コード *</Label>
+              <Input value={companyForm.code} onChange={(e) => setCompanyForm({ ...companyForm, code: e.target.value })} placeholder="例: TOKITO" />
+            </div>
+            <div className="space-y-2">
+              <Label>表示順序</Label>
+              <Input type="number" value={companyForm.sortOrder} onChange={(e) => setCompanyForm({ ...companyForm, sortOrder: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCompanyDialogOpen(false)}>キャンセル</Button>
+            <Button onClick={saveCompany}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== JobType Dialog ===== */}
+      <Dialog open={jobTypeDialogOpen} onOpenChange={setJobTypeDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingJobType ? "職種を編集" : "職種を追加"}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>職種名 *</Label>
+              <Input value={jobTypeForm.name} onChange={(e) => setJobTypeForm({ ...jobTypeForm, name: e.target.value })} placeholder="例: エンジニア" />
+            </div>
+            <div className="space-y-2">
+              <Label>表示順序</Label>
+              <Input type="number" value={jobTypeForm.sortOrder} onChange={(e) => setJobTypeForm({ ...jobTypeForm, sortOrder: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setJobTypeDialogOpen(false)}>キャンセル</Button>
+            <Button onClick={saveJobType}>保存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== Department Dialog ===== */}
       <Dialog open={deptDialogOpen} onOpenChange={setDeptDialogOpen}>

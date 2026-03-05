@@ -18,8 +18,10 @@ export async function GET(
     const employee = await prisma.employee.findUnique({
       where: { id },
       include: {
+        company: { select: { id: true, name: true } },
         department: { select: { id: true, name: true, code: true } },
         position: { select: { id: true, name: true, level: true } },
+        jobType: { select: { id: true, name: true } },
         qualifications: {
           include: {
             qualification: true,
@@ -87,8 +89,10 @@ export async function PUT(
       birthDate,
       gender,
       address,
+      companyId,
       departmentId,
       positionId,
+      jobTypeId,
       grade,
       salaryStep,
       baseSalary,
@@ -166,8 +170,10 @@ export async function PUT(
         birthDate: birthDate ? new Date(birthDate) : null,
         gender: gender || null,
         address: address || null,
+        companyId: companyId || null,
         departmentId: departmentId || null,
         positionId: positionId || null,
+        jobTypeId: jobTypeId || null,
         grade: grade !== undefined && grade !== "" ? parseInt(grade, 10) : existing.grade,
         salaryStep:
           salaryStep !== undefined && salaryStep !== ""

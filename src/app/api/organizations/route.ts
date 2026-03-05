@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -56,17 +56,23 @@ function buildTree(
     }));
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const companyId = searchParams.get("companyId") || "";
+  const employeeWhere = companyId
+    ? { isActive: true, companyId }
+    : { isActive: true };
+
   const departments = await prisma.department.findMany({
     orderBy: { sortOrder: "asc" },
     include: {
       employees: {
-        where: { isActive: true },
+        where: employeeWhere,
         select: {
           id: true,
           employeeCode: true,

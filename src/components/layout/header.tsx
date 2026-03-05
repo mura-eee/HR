@@ -3,11 +3,20 @@
 import { useSession } from "next-auth/react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bell } from "lucide-react";
+import { Bell, Building2, ChevronDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useCompany } from "@/components/providers/company-provider";
 
 export default function Header() {
   const { data: session } = useSession();
+  const { companies, selectedCompanyId, selectedCompanyName, setCompany } = useCompany();
 
   const getRoleBadge = (role: string) => {
     switch (role) {
@@ -22,9 +31,42 @@ export default function Header() {
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
-      <div>
-        {/* Page title will be set by each page */}
-      </div>
+      {/* 会社切り替えドロップダウン */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="flex items-center gap-2 h-9 px-3 font-medium">
+            <Building2 className="w-4 h-4 text-blue-600" />
+            <span className="max-w-[200px] truncate">{selectedCompanyName}</span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuItem
+            onClick={() => setCompany(null)}
+            className="flex items-center justify-between cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-blue-600" />
+              <span className="font-medium">トキトグループ</span>
+              <Badge variant="secondary" className="text-xs ml-1">全社</Badge>
+            </div>
+            {selectedCompanyId === null && <Check className="w-4 h-4 text-blue-600" />}
+          </DropdownMenuItem>
+
+          {companies.length > 0 && <DropdownMenuSeparator />}
+
+          {companies.map((company) => (
+            <DropdownMenuItem
+              key={company.id}
+              onClick={() => setCompany(company.id)}
+              className="flex items-center justify-between cursor-pointer"
+            >
+              <span className="truncate">{company.name}</span>
+              {selectedCompanyId === company.id && <Check className="w-4 h-4 text-blue-600" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="relative">

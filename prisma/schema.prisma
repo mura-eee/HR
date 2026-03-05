@@ -20,6 +20,26 @@ model User {
   updatedAt    DateTime @updatedAt
 }
 
+model Company {
+  id        String     @id @default(cuid())
+  name      String
+  code      String     @unique
+  isActive  Boolean    @default(true)
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+}
+
+model JobType {
+  id        String     @id @default(cuid())
+  name      String
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  employees Employee[]
+}
+
 model Employee {
   id              String   @id @default(cuid())
   employeeCode    String   @unique
@@ -33,10 +53,14 @@ model Employee {
   birthDate       DateTime?
   gender          String?
   address         String?
+  companyId       String?
+  company         Company?    @relation(fields: [companyId], references: [id])
   departmentId    String?
   department      Department? @relation(fields: [departmentId], references: [id])
   positionId      String?
   position        Position?   @relation(fields: [positionId], references: [id])
+  jobTypeId       String?
+  jobType         JobType?    @relation(fields: [jobTypeId], references: [id])
   grade                Int         @default(1)
   salaryStep           Int         @default(1)
   baseSalary           Int         @default(0)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useCompany } from "@/components/providers/company-provider";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -83,6 +84,7 @@ function formatDate(dateStr: string | null): string {
 
 export default function EmployeesPage() {
   const router = useRouter();
+  const { selectedCompanyId } = useCompany();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -112,6 +114,7 @@ export default function EmployeesPage() {
 
       if (search) params.set("search", search);
       if (departmentFilter) params.set("departmentId", departmentFilter);
+      if (selectedCompanyId) params.set("companyId", selectedCompanyId);
 
       const res = await fetch(`/api/employees?${params.toString()}`);
       if (!res.ok) throw new Error("取得に失敗しました");
@@ -124,7 +127,7 @@ export default function EmployeesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, search, departmentFilter, sortField, sortOrder]);
+  }, [pagination.page, search, departmentFilter, sortField, sortOrder, selectedCompanyId]);
 
   const fetchDepartments = useCallback(async () => {
     try {

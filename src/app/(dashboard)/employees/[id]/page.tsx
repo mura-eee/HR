@@ -120,8 +120,10 @@ interface Employee {
   emergencyContactAddress: string | null;
   profileImage: string | null;
   isActive: boolean;
+  company: { id: string; name: string } | null;
   department: Department | null;
   position: Position | null;
+  jobType: { id: string; name: string } | null;
   employeeQualifications: EmployeeQualification[];
   evaluations: Evaluation[];
 }
@@ -372,27 +374,35 @@ export default function EmployeeDetailPage() {
                     <Calendar className="h-3 w-3" />
                     入社日
                   </p>
-                  <p className="font-medium">
-                    {formatDate(employee.hireDate)}
+                  <p className="font-medium">{formatDate(employee.hireDate)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Building2 className="h-3 w-3" />
+                    所属
                   </p>
+                  <p className="font-medium">{employee.company?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Briefcase className="h-3 w-3" />
+                    職種
+                  </p>
+                  <p className="font-medium">{employee.jobType?.name || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
                     部署
                   </p>
-                  <p className="font-medium">
-                    {employee.department?.name || "-"}
-                  </p>
+                  <p className="font-medium">{employee.department?.name || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Briefcase className="h-3 w-3" />
                     役職
                   </p>
-                  <p className="font-medium">
-                    {employee.position?.name || "-"}
-                  </p>
+                  <p className="font-medium">{employee.position?.name || "-"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
