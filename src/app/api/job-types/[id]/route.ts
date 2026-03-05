@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -20,8 +20,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "職種名は必須です" }, { status: 400 });
     }
 
+    const { id } = await params;
     const jobType = await prisma.jobType.update({
-      where: { id: params.id },
+      where: { id },
       data: { name, sortOrder: sortOrder !== undefined ? parseInt(sortOrder, 10) : 0 },
     });
 
@@ -32,7 +33,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -42,7 +43,8 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
-    const count = await prisma.employee.count({ where: { jobTypeId: params.id } });
+    const { id } = await params;
+    const count = await prisma.employee.count({ where: { jobTypeId: id } });
     if (count > 0) {
       return NextResponse.json(
         { error: `この職種には${count}名の社員が設定されているため削除できません` },
@@ -50,7 +52,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       );
     }
 
-    await prisma.jobType.delete({ where: { id: params.id } });
+    await prisma.jobType.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("職種削除エラー:", error);

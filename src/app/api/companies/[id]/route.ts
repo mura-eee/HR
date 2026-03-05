@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -20,15 +20,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "会社名とコードは必須です" }, { status: 400 });
     }
 
+    const { id } = await params;
     const duplicate = await prisma.company.findFirst({
-      where: { code, NOT: { id: params.id } },
+      where: { code, NOT: { id } },
     });
     if (duplicate) {
       return NextResponse.json({ error: "このコードは既に使用されています" }, { status: 400 });
     }
 
     const company = await prisma.company.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name,
         code,
@@ -44,7 +45,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -54,8 +55,9 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
+    const { id } = await params;
     // 所属社員がいる場合は削除不可
-    const count = await prisma.employee.count({ where: { companyId: params.id } });
+    const count = await prisma.employee.count({ where: { companyId: id } });
     if (count > 0) {
       return NextResponse.json(
         { error: `この企業には${count}名の社員が所属しているため削除できません` },
@@ -63,7 +65,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       );
     }
 
-    await prisma.company.delete({ where: { id: params.id } });
+    await prisma.company.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("所属企業削除エラー:", error);
