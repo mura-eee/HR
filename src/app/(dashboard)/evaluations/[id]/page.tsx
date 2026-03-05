@@ -56,6 +56,7 @@ import {
   calculateConvertedScore,
   RANK_TABLE,
 } from "@/lib/evaluation";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 
 // ---------- Type Definitions ----------
 
@@ -187,6 +188,7 @@ export default function EvaluationDetailPage() {
   const params = useParams();
   const router = useRouter();
   const evaluationId = params.id as string;
+  const { can } = useFieldPermissions();
 
   const [evaluation, setEvaluation] = useState<EvaluationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -597,15 +599,21 @@ export default function EvaluationDetailPage() {
       </Card>
 
       {/* Tabs for Competency and KPI */}
-      <Tabs defaultValue="competency" className="w-full">
+      <Tabs defaultValue={can("evaluationCompetency") !== "hidden" ? "competency" : can("evaluationKpi") !== "hidden" ? "kpi" : "summary"} className="w-full">
         <TabsList>
-          <TabsTrigger value="competency">コンピテンシー評価（40%）</TabsTrigger>
-          <TabsTrigger value="kpi">KPI目標評価（60%）</TabsTrigger>
-          <TabsTrigger value="summary">最終評価サマリー</TabsTrigger>
+          {can("evaluationCompetency") !== "hidden" && (
+            <TabsTrigger value="competency">コンピテンシー評価（40%）</TabsTrigger>
+          )}
+          {can("evaluationKpi") !== "hidden" && (
+            <TabsTrigger value="kpi">KPI目標評価（60%）</TabsTrigger>
+          )}
+          {can("evaluationSummary") !== "hidden" && (
+            <TabsTrigger value="summary">最終評価サマリー</TabsTrigger>
+          )}
         </TabsList>
 
         {/* =============== SECTION 2: Competency Evaluation =============== */}
-        <TabsContent value="competency">
+        {can("evaluationCompetency") !== "hidden" && <TabsContent value="competency">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">
@@ -816,10 +824,10 @@ export default function EvaluationDetailPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
         {/* =============== SECTION 3: KPI Evaluation =============== */}
-        <TabsContent value="kpi">
+        {can("evaluationKpi") !== "hidden" && <TabsContent value="kpi">
           <Card>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -1177,10 +1185,10 @@ export default function EvaluationDetailPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
 
         {/* =============== SECTION 4: Final Score Summary =============== */}
-        <TabsContent value="summary">
+        {can("evaluationSummary") !== "hidden" && <TabsContent value="summary">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Score Summary Card */}
             <Card>
@@ -1236,40 +1244,44 @@ export default function EvaluationDetailPage() {
                 </div>
 
                 {/* Salary Step Change */}
-                <div className="flex items-center justify-between p-3 rounded-lg border">
-                  <span className="text-sm font-medium">号俸変動</span>
-                  <span
-                    className={`font-mono text-lg font-bold ${
-                      currentRank.salaryStepChange > 0
-                        ? "text-green-600"
-                        : currentRank.salaryStepChange < 0
-                        ? "text-red-600"
-                        : "text-gray-600"
-                    }`}
-                  >
-                    {currentRank.salaryStepChange > 0
-                      ? `+${currentRank.salaryStepChange}`
-                      : currentRank.salaryStepChange}
-                  </span>
-                </div>
+                {can("evaluationSalaryStep") !== "hidden" && (
+                  <>
+                    <div className="flex items-center justify-between p-3 rounded-lg border">
+                      <span className="text-sm font-medium">号俸変動</span>
+                      <span
+                        className={`font-mono text-lg font-bold ${
+                          currentRank.salaryStepChange > 0
+                            ? "text-green-600"
+                            : currentRank.salaryStepChange < 0
+                            ? "text-red-600"
+                            : "text-gray-600"
+                        }`}
+                      >
+                        {currentRank.salaryStepChange > 0
+                          ? `+${currentRank.salaryStepChange}`
+                          : currentRank.salaryStepChange}
+                      </span>
+                    </div>
 
-                {/* Current Employee Info */}
-                <div className="p-3 rounded-lg border bg-gray-50 space-y-1">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">現在の等級</span>
-                    <span className="font-medium">{evaluation.employee.grade != null ? `${evaluation.employee.grade}等級` : "-"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">現在の号俸</span>
-                    <span className="font-medium">{evaluation.employee.salaryStep != null ? `${evaluation.employee.salaryStep}号` : "-"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">評価後の号俸</span>
-                    <span className="font-bold">
-                      {Math.max(1, evaluation.employee.salaryStep + currentRank.salaryStepChange)}号
-                    </span>
-                  </div>
-                </div>
+                    {/* Current Employee Info */}
+                    <div className="p-3 rounded-lg border bg-gray-50 space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">現在の等級</span>
+                        <span className="font-medium">{evaluation.employee.grade != null ? `${evaluation.employee.grade}等級` : "-"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">現在の号俸</span>
+                        <span className="font-medium">{evaluation.employee.salaryStep != null ? `${evaluation.employee.salaryStep}号` : "-"}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">評価後の号俸</span>
+                        <span className="font-bold">
+                          {Math.max(1, evaluation.employee.salaryStep + currentRank.salaryStepChange)}号
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -1323,7 +1335,7 @@ export default function EvaluationDetailPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       {/* =============== Status Change Confirmation Dialog =============== */}

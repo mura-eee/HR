@@ -180,6 +180,21 @@ export default function SettingsPage() {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`「${userName}」のアカウントを削除しますか？\nこの操作は取り消せません。`)) return;
+    try {
+      const res = await fetch(`/api/settings/users/${userId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "削除に失敗しました");
+        return;
+      }
+      fetchUsersData();
+    } catch {
+      alert("削除に失敗しました");
+    }
+  };
+
   const handleAddUser = async () => {
     setAddUserError("");
     if (!addUserForm.name || !addUserForm.email || !addUserForm.password) {
@@ -860,6 +875,7 @@ export default function SettingsPage() {
                       <TableHead>メールアドレス</TableHead>
                       <TableHead>関連社員</TableHead>
                       <TableHead>ロール</TableHead>
+                      <TableHead className="text-right">操作</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -888,6 +904,15 @@ export default function SettingsPage() {
                               <SelectItem value="GENERAL">一般</SelectItem>
                             </SelectContent>
                           </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteUser(user.id, user.name)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

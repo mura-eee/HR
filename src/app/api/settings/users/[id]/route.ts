@@ -50,3 +50,34 @@ export async function PUT(
     );
   }
 }
+
+// DELETE /api/settings/users/[id] - Delete user (admin only)
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    }
+
+    if (session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "権限がありません" }, { status: 403 });
+    }
+
+    const { id } = await params;
+
+    // 自分自身は削除不可
+    const currentUser = await prisma.user.findUnique({ where: { email: session.user?.email ?? "" } });
+    if (currentUser?.id === id) {
+      return NextResponse.json({ error: "自分自身のアカウントは削除できません" }, { status: 400 });
+    }
+
+    await prisma.user.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("ユーザー削除エラー:", error);
+    return NextResponse.json({ error: "ユーザーの削除に失敗しました" }, { status: 500 });
+  }
+}

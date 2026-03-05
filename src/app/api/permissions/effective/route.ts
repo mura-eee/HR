@@ -15,10 +15,7 @@ export async function GET() {
     include: {
       employee: {
         select: {
-          companyId: true,
-          departmentId: true,
           positionId: true,
-          jobTypeId: true,
         },
       },
     },
@@ -33,14 +30,11 @@ export async function GET() {
     return NextResponse.json({ permissions: all });
   }
 
-  // 対象リストを優先度順に構築
+  // 対象リストを優先度順に構築（user > position）
   const targets: { type: string; id: string }[] = [
     { type: "user", id: user.id },
   ];
-  if (user.employee?.companyId)    targets.push({ type: "company",    id: user.employee.companyId });
-  if (user.employee?.departmentId) targets.push({ type: "department", id: user.employee.departmentId });
-  if (user.employee?.positionId)   targets.push({ type: "position",   id: user.employee.positionId });
-  if (user.employee?.jobTypeId)    targets.push({ type: "jobType",    id: user.employee.jobTypeId });
+  if (user.employee?.positionId) targets.push({ type: "position", id: user.employee.positionId });
 
   // 全対象の権限を一括取得
   const allPerms = await prisma.fieldPermission.findMany({

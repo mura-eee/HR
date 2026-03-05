@@ -26,7 +26,7 @@ interface Target {
   name: string;
 }
 
-const TARGET_TYPES: TargetType[] = ["user", "company", "department", "position", "jobType"];
+const TARGET_TYPES: TargetType[] = ["user", "position"];
 const LEVELS: PermissionLevel[] = ["edit", "view", "hidden"];
 
 export function PermissionsTab() {
@@ -55,10 +55,7 @@ export function PermissionsTab() {
 
       const urlMap: Record<TargetType, string> = {
         user: "/api/settings/users",
-        company: "/api/companies",
-        department: "/api/departments",
         position: "/api/positions",
-        jobType: "/api/job-types",
       };
 
       try {
@@ -69,16 +66,9 @@ export function PermissionsTab() {
         let list: Target[] = [];
         if (targetType === "user") {
           list = (data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name }));
-        } else if (targetType === "company") {
-          list = (data.companies || []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
-        } else if (targetType === "department") {
-          const arr = Array.isArray(data) ? data : (data.departments || []);
-          list = arr.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name }));
         } else if (targetType === "position") {
           const arr = Array.isArray(data) ? data : (data.positions || []);
           list = arr.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }));
-        } else if (targetType === "jobType") {
-          list = (data.jobTypes || []).map((j: { id: string; name: string }) => ({ id: j.id, name: j.name }));
         }
         setTargets(list);
       } catch (e) {

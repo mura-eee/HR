@@ -63,18 +63,25 @@ export const FIELD_GROUPS: FieldGroup[] = [
       { key: "emergencyContact", label: "緊急連絡先" },
     ],
   },
+  {
+    group: "評価情報",
+    fields: [
+      { key: "evaluationCompetency", label: "コンピテンシー評価" },
+      { key: "evaluationKpi", label: "KPI評価" },
+      { key: "evaluationSummary", label: "評価サマリー（スコア・ランク）" },
+      { key: "evaluationSalaryStep", label: "号俸変動" },
+    ],
+  },
 ];
 
 export const ALL_FIELDS: FieldDef[] = FIELD_GROUPS.flatMap((g) => g.fields);
 
-export type TargetType = "user" | "company" | "department" | "position" | "jobType";
+// 対象タイプ: ユーザーと役職のみ
+export type TargetType = "user" | "position";
 
 export const TARGET_TYPE_LABELS: Record<TargetType, string> = {
   user: "ユーザー",
-  company: "所属",
-  department: "部署",
   position: "役職",
-  jobType: "職種",
 };
 
 export const LEVEL_LABELS: Record<PermissionLevel, string> = {
@@ -83,7 +90,5 @@ export const LEVEL_LABELS: Record<PermissionLevel, string> = {
   hidden: "非表示",
 };
 
-// 優先順位: user > company > department > position > jobType
-export const TARGET_PRIORITY: TargetType[] = [
-  "user", "company", "department", "position", "jobType",
-];
+// 優先順位: user > position（ユーザー設定が役職設定より優先）
+export const TARGET_PRIORITY: TargetType[] = ["user", "position"];
