@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "ADMIN") return NextResponse.json({ error: "権限がありません" }, { status: 403 });
 
   const { searchParams } = new URL(request.url);
   const targetType = searchParams.get("targetType");
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "ADMIN") return NextResponse.json({ error: "権限がありません" }, { status: 403 });
 
   const { targetType, targetId, permissions } = await request.json();
   if (!targetType || !targetId) {

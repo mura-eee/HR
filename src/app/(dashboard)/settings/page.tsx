@@ -141,6 +141,10 @@ export default function SettingsPage() {
   // ---------- Users ----------
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({ name: "", email: "", password: "", role: "GENERAL" });
+  const [addUserError, setAddUserError] = useState("");
+  const [addUserSaving, setAddUserSaving] = useState(false);
 
   const fetchUsersData = useCallback(async () => {
     try {
@@ -173,6 +177,34 @@ export default function SettingsPage() {
     } catch (error) {
       console.error("Failed to change role:", error);
       alert("ロールの変更に失敗しました");
+    }
+  };
+
+  const handleAddUser = async () => {
+    setAddUserError("");
+    if (!addUserForm.name || !addUserForm.email || !addUserForm.password) {
+      setAddUserError("名前・メールアドレス・パスワードは必須です");
+      return;
+    }
+    setAddUserSaving(true);
+    try {
+      const res = await fetch("/api/settings/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addUserForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddUserError(data.error || "ユーザーの作成に失敗しました");
+        return;
+      }
+      setAddUserDialogOpen(false);
+      setAddUserForm({ name: "", email: "", password: "", role: "GENERAL" });
+      fetchUsersData();
+    } catch {
+      setAddUserError("ユーザーの作成に失敗しました");
+    } finally {
+      setAddUserSaving(false);
     }
   };
 
@@ -744,9 +776,70 @@ export default function SettingsPage() {
 
         {/* ===== ユーザー管理 Tab ===== */}
         <TabsContent value="users">
+          {/* ユーザー追加ダイアログ */}
+          <Dialog open={addUserDialogOpen} onOpenChange={(open) => { setAddUserDialogOpen(open); if (!open) { setAddUserForm({ name: "", email: "", password: "", role: "GENERAL" }); setAddUserError(""); } }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>ユーザーを追加</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>名前 <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={addUserForm.name}
+                    onChange={(e) => setAddUserForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="例: 山田 太郎"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>メールアドレス <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="email"
+                    value={addUserForm.email}
+                    onChange={(e) => setAddUserForm((f) => ({ ...f, email: e.target.value }))}
+                    placeholder="例: taro@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>パスワード <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="password"
+                    value={addUserForm.password}
+                    onChange={(e) => setAddUserForm((f) => ({ ...f, password: e.target.value }))}
+                    placeholder="8文字以上を推奨"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>ロール</Label>
+                  <Select value={addUserForm.role} onValueChange={(v) => setAddUserForm((f) => ({ ...f, role: v }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">管理者</SelectItem>
+                      <SelectItem value="MANAGER">マネージャー</SelectItem>
+                      <SelectItem value="GENERAL">一般</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {addUserError && <p className="text-sm text-destructive">{addUserError}</p>}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAddUserDialogOpen(false)}>キャンセル</Button>
+                <Button onClick={handleAddUser} disabled={addUserSaving}>
+                  {addUserSaving ? "作成中..." : "作成する"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg">ユーザー一覧</CardTitle>
+              <Button size="sm" onClick={() => setAddUserDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-1" />
+                ユーザーを追加
+              </Button>
             </CardHeader>
             <CardContent>
               {loadingUsers ? (
