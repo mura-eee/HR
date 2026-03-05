@@ -574,7 +574,7 @@ export default function EvaluationDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">等級:</span>
-              <span className="text-sm font-medium">{evaluation.employee.grade}等級</span>
+              <span className="text-sm font-medium">{evaluation.employee.grade != null ? `${evaluation.employee.grade}等級` : "-"}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">1次評価者:</span>
@@ -1257,11 +1257,11 @@ export default function EvaluationDetailPage() {
                 <div className="p-3 rounded-lg border bg-gray-50 space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">現在の等級</span>
-                    <span className="font-medium">{evaluation.employee.grade}等級</span>
+                    <span className="font-medium">{evaluation.employee.grade != null ? `${evaluation.employee.grade}等級` : "-"}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">現在の号俸</span>
-                    <span className="font-medium">{evaluation.employee.salaryStep}号</span>
+                    <span className="font-medium">{evaluation.employee.salaryStep != null ? `${evaluation.employee.salaryStep}号` : "-"}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">評価後の号俸</span>

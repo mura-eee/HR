@@ -61,8 +61,8 @@ model Employee {
   position        Position?   @relation(fields: [positionId], references: [id])
   jobTypeId       String?
   jobType         JobType?    @relation(fields: [jobTypeId], references: [id])
-  grade                Int         @default(1)
-  salaryStep           Int         @default(1)
+  grade                Int?
+  salaryStep           Int?
   baseSalary           Int         @default(0)
   qualificationAllowance Int       @default(0)
   positionAllowance    Int         @default(0)

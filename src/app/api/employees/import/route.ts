@@ -21,6 +21,13 @@ function toInt(val: unknown, fallback = 0): number {
   return isNaN(n) ? fallback : n;
 }
 
+// 空欄の場合はnullを返す（等級・号俸など）
+function toIntOrNull(val: unknown): number | null {
+  if (val === undefined || val === null || String(val).trim() === "") return null;
+  const n = parseInt(String(val), 10);
+  return isNaN(n) ? null : n;
+}
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -114,8 +121,8 @@ export async function POST(request: NextRequest) {
       departmentId: dept?.id || null,
       positionId: position?.id || null,
       jobTypeId: jobType?.id || null,
-      grade: toInt(row["等級"], 1),
-      salaryStep: toInt(row["号俸"], 1),
+      grade: toIntOrNull(row["等級"]),
+      salaryStep: toIntOrNull(row["号俸"]),
       baseSalary: toInt(row["基本給"], 0),
       qualificationAllowance: toInt(row["資格手当"], 0),
       positionAllowance: toInt(row["役職手当"], 0),
