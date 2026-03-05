@@ -426,7 +426,18 @@ function QualificationsContent() {
                   <TableBody>
                     {qualifications.map((qual) => (
                       <TableRow key={qual.id}>
-                        <TableCell className="font-medium">{qual.name}</TableCell>
+                        <TableCell className="font-medium">
+                          <button
+                            type="button"
+                            className="text-blue-600 hover:underline text-left"
+                            onClick={() => {
+                              setFilterQualificationId(qual.id);
+                              setActiveTab("employee");
+                            }}
+                          >
+                            {qual.name}
+                          </button>
+                        </TableCell>
                         <TableCell>
                           {qual.category ? (
                             <Badge variant="secondary">{qual.category}</Badge>
@@ -438,7 +449,18 @@ function QualificationsContent() {
                           {qual.description || "-"}
                         </TableCell>
                         <TableCell className="text-center">
-                          {qual._count?.employeeQualifications ?? 0}
+                          <button
+                            type="button"
+                            className={`font-medium hover:underline ${(qual._count?.employeeQualifications ?? 0) > 0 ? "text-blue-600 cursor-pointer" : "text-muted-foreground cursor-default"}`}
+                            onClick={() => {
+                              if ((qual._count?.employeeQualifications ?? 0) > 0) {
+                                setFilterQualificationId(qual.id);
+                                setActiveTab("employee");
+                              }
+                            }}
+                          >
+                            {qual._count?.employeeQualifications ?? 0}
+                          </button>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
