@@ -18,8 +18,10 @@ export async function GET() {
 
   const employees = await prisma.employee.findMany({
     include: {
+      company: true,
       department: true,
       position: true,
+      jobType: true,
     },
     orderBy: { employeeCode: "asc" },
   });
@@ -36,9 +38,12 @@ export async function GET() {
     "生年月日": formatDate(emp.birthDate),
     "性別": emp.gender === "male" ? "男性" : emp.gender === "female" ? "女性" : emp.gender === "other" ? "その他" : "",
     "住所": emp.address || "",
+    // 所属・組織（システム表示順: 所属→部署→役職→職種）
+    "所属名": emp.company?.name || "",
     "部署コード": emp.department?.code || "",
     "部署名": emp.department?.name || "",
     "役職名": emp.position?.name || "",
+    "職種名": emp.jobType?.name || "",
     "等級": emp.grade ?? "",
     "号俸": emp.salaryStep ?? "",
     "基本給": emp.baseSalary ?? 0,
@@ -72,19 +77,20 @@ export async function GET() {
 
   const ws = XLSX.utils.json_to_sheet(data);
 
-  // Set column widths
+  // Set column widths (43 columns)
   ws["!cols"] = [
-    { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 12 },
-    { wch: 24 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 },
-    { wch: 30 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 6 },
-    { wch: 6 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 16 },
-    { wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 10 },
-    { wch: 8 },
+    { wch: 12 }, { wch: 8 },  { wch: 8 },  { wch: 12 }, { wch: 12 }, // 社員コード, 姓, 名, 姓（カナ）, 名（カナ）
+    { wch: 24 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 },  // メール, 電話, 入社日, 生年月日, 性別
+    { wch: 30 },                                                        // 住所
+    { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, // 所属名, 部署コード, 部署名, 役職名, 職種名
+    { wch: 6 },  { wch: 6 },  { wch: 10 }, { wch: 10 }, { wch: 10 }, // 等級, 号俸, 基本給, 資格手当, 役職手当
+    { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 10 }, // その他手当①②③
+    { wch: 8 },                                                         // ステータス
     // 社会保険
-    { wch: 16 }, { wch: 14 }, { wch: 14 },
-    { wch: 16 }, { wch: 14 }, { wch: 14 },
-    { wch: 14 }, { wch: 14 }, { wch: 14 },
-    { wch: 20 }, { wch: 8 },
+    { wch: 16 }, { wch: 14 }, { wch: 14 }, // 健康保険
+    { wch: 16 }, { wch: 14 }, { wch: 14 }, // 厚生年金
+    { wch: 14 }, { wch: 14 }, { wch: 14 }, // 基礎年金, 雇用保険取得・喪失日
+    { wch: 20 }, { wch: 8 },               // 雇用保険番号, 血液型
     // 緊急連絡先
     { wch: 16 }, { wch: 10 }, { wch: 16 }, { wch: 30 },
   ];

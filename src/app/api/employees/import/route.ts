@@ -38,10 +38,18 @@ export async function POST(request: NextRequest) {
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { raw: true }) as Record<string, unknown>[];
 
-  const departments = await prisma.department.findMany();
-  const positions = await prisma.position.findMany();
+  // マスタデータを一括取得
+  const [departments, positions, companies, jobTypes] = await Promise.all([
+    prisma.department.findMany(),
+    prisma.position.findMany(),
+    prisma.company.findMany(),
+    prisma.jobType.findMany(),
+  ]);
+
   const deptByCode = Object.fromEntries(departments.map((d) => [d.code, d]));
   const positionByName = Object.fromEntries(positions.map((p) => [p.name, p]));
+  const companyByName = Object.fromEntries(companies.map((c) => [c.name, c]));
+  const jobTypeByName = Object.fromEntries(jobTypes.map((j) => [j.name, j]));
 
   const results = { created: 0, updated: 0, errors: [] as string[] };
 
@@ -63,6 +71,14 @@ export async function POST(request: NextRequest) {
 
     const positionName = String(row["役職名"] ?? "").trim();
     const position = positionByName[positionName] || null;
+
+    // 所属（会社名で検索）
+    const companyName = String(row["所属名"] ?? "").trim();
+    const company = companyName ? (companyByName[companyName] || null) : null;
+
+    // 職種（職種名で検索）
+    const jobTypeName = String(row["職種名"] ?? "").trim();
+    const jobType = jobTypeName ? (jobTypeByName[jobTypeName] || null) : null;
 
     const genderStr = String(row["性別"] ?? "").trim();
     const gender = genderStr === "男性" ? "male" : genderStr === "女性" ? "female" : genderStr === "その他" ? "other" : null;
@@ -94,8 +110,10 @@ export async function POST(request: NextRequest) {
       birthDate: parseDate(row["生年月日"]),
       gender,
       address: String(row["住所"] ?? "").trim() || null,
+      companyId: company?.id || null,
       departmentId: dept?.id || null,
       positionId: position?.id || null,
+      jobTypeId: jobType?.id || null,
       grade: toInt(row["等級"], 1),
       salaryStep: toInt(row["号俸"], 1),
       baseSalary: toInt(row["基本給"], 0),
