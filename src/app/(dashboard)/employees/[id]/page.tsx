@@ -385,13 +385,6 @@ export default function EmployeeDetailPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Briefcase className="h-3 w-3" />
-                    職種
-                  </p>
-                  <p className="font-medium">{employee.jobType?.name || "-"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
                     部署
                   </p>
@@ -403,6 +396,13 @@ export default function EmployeeDetailPage() {
                     役職
                   </p>
                   <p className="font-medium">{employee.position?.name || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Briefcase className="h-3 w-3" />
+                    職種
+                  </p>
+                  <p className="font-medium">{employee.jobType?.name || "-"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>

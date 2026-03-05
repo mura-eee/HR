@@ -462,25 +462,6 @@ export default function EditEmployeePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="jobTypeId">職種</Label>
-                <Select
-                  value={form.jobTypeId}
-                  onValueChange={(value) => handleChange("jobTypeId", value === "none" ? "" : value)}
-                >
-                  <SelectTrigger id="jobTypeId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">未設定</SelectItem>
-                    {jobTypes.map((jt) => (
-                      <SelectItem key={jt.id} value={jt.id}>
-                        {jt.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="departmentId">部署</Label>
                 <Select
                   value={form.departmentId}
@@ -511,6 +492,25 @@ export default function EditEmployeePage() {
                     {positions.map((pos) => (
                       <SelectItem key={pos.id} value={pos.id}>
                         {pos.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jobTypeId">職種</Label>
+                <Select
+                  value={form.jobTypeId}
+                  onValueChange={(value) => handleChange("jobTypeId", value === "none" ? "" : value)}
+                >
+                  <SelectTrigger id="jobTypeId">
+                    <SelectValue placeholder="選択してください" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">未設定</SelectItem>
+                    {jobTypes.map((jt) => (
+                      <SelectItem key={jt.id} value={jt.id}>
+                        {jt.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
