@@ -16,6 +16,7 @@ export async function GET() {
       employee: {
         select: {
           positionId: true,
+          companyId: true,
         },
       },
     },
@@ -30,10 +31,11 @@ export async function GET() {
     return NextResponse.json({ permissions: all });
   }
 
-  // 対象リストを優先度順に構築（user > position）
+  // 対象リストを優先度順に構築（user > company > position）
   const targets: { type: string; id: string }[] = [
     { type: "user", id: user.id },
   ];
+  if (user.employee?.companyId) targets.push({ type: "company", id: user.employee.companyId });
   if (user.employee?.positionId) targets.push({ type: "position", id: user.employee.positionId });
 
   // 全対象の権限を一括取得

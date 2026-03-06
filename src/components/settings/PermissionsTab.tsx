@@ -26,7 +26,7 @@ interface Target {
   name: string;
 }
 
-const TARGET_TYPES: TargetType[] = ["user", "position"];
+const TARGET_TYPES: TargetType[] = ["user", "company", "position"];
 const LEVELS: PermissionLevel[] = ["edit", "view", "hidden"];
 
 export function PermissionsTab() {
@@ -55,6 +55,7 @@ export function PermissionsTab() {
 
       const urlMap: Record<TargetType, string> = {
         user: "/api/settings/users",
+        company: "/api/companies",
         position: "/api/positions",
       };
 
@@ -66,6 +67,9 @@ export function PermissionsTab() {
         let list: Target[] = [];
         if (targetType === "user") {
           list = (data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name }));
+        } else if (targetType === "company") {
+          const arr = Array.isArray(data) ? data : (data.companies || []);
+          list = arr.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
         } else if (targetType === "position") {
           const arr = Array.isArray(data) ? data : (data.positions || []);
           list = arr.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }));
