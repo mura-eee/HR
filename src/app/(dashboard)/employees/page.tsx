@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useCompany } from "@/components/providers/company-provider";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -85,6 +86,8 @@ function formatDate(dateStr: string | null): string {
 export default function EmployeesPage() {
   const router = useRouter();
   const { selectedCompanyId } = useCompany();
+  // 選択中の会社に基づいてフィールド権限を取得（会社選択時は user_company 権限が最優先）
+  const { can } = useFieldPermissions(selectedCompanyId || null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo>({
@@ -295,96 +298,116 @@ export default function EmployeesPage() {
           </div>
 
           {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("employeeCode")}
-                  >
-                    社員コード
-                    <SortIcon field="employeeCode" />
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("lastName")}
-                  >
-                    氏名
-                    <SortIcon field="lastName" />
-                  </TableHead>
-                  <TableHead>部署</TableHead>
-                  <TableHead>役職</TableHead>
-                  <TableHead
-                    className="cursor-pointer select-none"
-                    onClick={() => handleSort("grade")}
-                  >
-                    等級
-                    <SortIcon field="grade" />
-                  </TableHead>
-                  <TableHead>ステータス</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      読み込み中...
-                    </TableCell>
-                  </TableRow>
-                ) : employees.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      社員データがありません
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  employees.map((employee) => (
-                    <TableRow
-                      key={employee.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => router.push(`/employees/${employee.id}`)}
-                    >
-                      <TableCell className="font-mono">
-                        {employee.employeeCode}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {employee.lastName} {employee.firstName}
-                          </div>
-                          {employee.lastNameKana && employee.firstNameKana && (
-                            <div className="text-sm text-muted-foreground">
-                              {employee.lastNameKana} {employee.firstNameKana}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {employee.department?.name || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {employee.position?.name || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {employee.grade !== null ? `${employee.grade}等級` : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={employee.isActive ? "default" : "secondary"}
+          {(() => {
+            // 表示する列を権限で決定（ステータスは常時表示、社員コードも常時表示）
+            const showName = can("name") !== "hidden";
+            const showDepartment = can("department") !== "hidden";
+            const showPosition = can("position") !== "hidden";
+            const showGrade = can("grade") !== "hidden";
+            // 常時表示: 社員コード + ステータス = 2列、それ以外は権限次第
+            const colSpan = 2 + (showName ? 1 : 0) + (showDepartment ? 1 : 0) + (showPosition ? 1 : 0) + (showGrade ? 1 : 0);
+
+            return (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead
+                        className="cursor-pointer select-none"
+                        onClick={() => handleSort("employeeCode")}
+                      >
+                        社員コード
+                        <SortIcon field="employeeCode" />
+                      </TableHead>
+                      {showName && (
+                        <TableHead
+                          className="cursor-pointer select-none"
+                          onClick={() => handleSort("lastName")}
                         >
-                          {employee.isActive ? "在籍" : "退職"}
-                        </Badge>
-                      </TableCell>
+                          氏名
+                          <SortIcon field="lastName" />
+                        </TableHead>
+                      )}
+                      {showDepartment && <TableHead>部署</TableHead>}
+                      {showPosition && <TableHead>役職</TableHead>}
+                      {showGrade && (
+                        <TableHead
+                          className="cursor-pointer select-none"
+                          onClick={() => handleSort("grade")}
+                        >
+                          等級
+                          <SortIcon field="grade" />
+                        </TableHead>
+                      )}
+                      <TableHead>ステータス</TableHead>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={colSpan} className="text-center py-8">
+                          読み込み中...
+                        </TableCell>
+                      </TableRow>
+                    ) : employees.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={colSpan}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          社員データがありません
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      employees.map((employee) => (
+                        <TableRow
+                          key={employee.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => router.push(`/employees/${employee.id}`)}
+                        >
+                          <TableCell className="font-mono">
+                            {employee.employeeCode}
+                          </TableCell>
+                          {showName && (
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">
+                                  {employee.lastName} {employee.firstName}
+                                </div>
+                                {employee.lastNameKana && employee.firstNameKana && (
+                                  <div className="text-sm text-muted-foreground">
+                                    {employee.lastNameKana} {employee.firstNameKana}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                          )}
+                          {showDepartment && (
+                            <TableCell>{employee.department?.name || "-"}</TableCell>
+                          )}
+                          {showPosition && (
+                            <TableCell>{employee.position?.name || "-"}</TableCell>
+                          )}
+                          {showGrade && (
+                            <TableCell>
+                              {employee.grade !== null ? `${employee.grade}等級` : "-"}
+                            </TableCell>
+                          )}
+                          <TableCell>
+                            <Badge
+                              variant={employee.isActive ? "default" : "secondary"}
+                            >
+                              {employee.isActive ? "在籍" : "退職"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            );
+          })()}
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
