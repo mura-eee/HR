@@ -76,13 +76,14 @@ export const FIELD_GROUPS: FieldGroup[] = [
 
 export const ALL_FIELDS: FieldDef[] = FIELD_GROUPS.flatMap((g) => g.fields);
 
-// 対象タイプ: ユーザー、所属会社、役職
-export type TargetType = "user" | "company" | "position";
+// 対象タイプ: ユーザー、所属会社、役職、ユーザー×会社別
+export type TargetType = "user" | "company" | "position" | "user_company";
 
 export const TARGET_TYPE_LABELS: Record<TargetType, string> = {
   user: "ユーザー",
   company: "所属会社",
   position: "役職",
+  user_company: "ユーザー × 会社別",
 };
 
 export const LEVEL_LABELS: Record<PermissionLevel, string> = {
@@ -91,5 +92,5 @@ export const LEVEL_LABELS: Record<PermissionLevel, string> = {
   hidden: "非表示",
 };
 
-// 優先順位: user > company > position（高優先度が低優先度を上書き）
-export const TARGET_PRIORITY: TargetType[] = ["user", "company", "position"];
+// 優先順位: user_company > user > company > position（高優先度が低優先度を上書き）
+export const TARGET_PRIORITY: TargetType[] = ["user_company", "user", "company", "position"];

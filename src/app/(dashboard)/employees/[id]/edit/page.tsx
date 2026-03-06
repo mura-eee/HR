@@ -62,8 +62,6 @@ export default function EditEmployeePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const { can } = useFieldPermissions();
-
   const [form, setForm] = useState({
     employeeCode: "",
     lastName: "",
@@ -111,6 +109,8 @@ export default function EditEmployeePage() {
     emergencyContactAddress: "",
     isActive: true,
   });
+
+  const { can } = useFieldPermissions(form.companyId || null);
 
   const fetchEmployee = useCallback(async () => {
     try {

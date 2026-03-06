@@ -26,51 +26,70 @@ interface Target {
   name: string;
 }
 
-const TARGET_TYPES: TargetType[] = ["user", "company", "position"];
+// 通常モード: user / company / position
+// 複合モード: user_company (ユーザー × 会社別)
+type Mode = TargetType;
+
+const MODES: Mode[] = ["user", "company", "position", "user_company"];
 const LEVELS: PermissionLevel[] = ["edit", "view", "hidden"];
 
+function initPerms(): Record<string, PermissionLevel> {
+  const init: Record<string, PermissionLevel> = {};
+  for (const f of ALL_FIELDS) init[f.key] = "edit";
+  return init;
+}
+
 export function PermissionsTab() {
-  const [targetType, setTargetType] = useState<TargetType>("user");
+  const [mode, setMode] = useState<Mode>("user");
+
+  // 通常モード用
   const [targets, setTargets] = useState<Target[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
-  const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(() => {
-    const init: Record<string, PermissionLevel> = {};
-    for (const f of ALL_FIELDS) init[f.key] = "edit";
-    return init;
-  });
+
+  // user_company モード用
+  const [users, setUsers] = useState<Target[]>([]);
+  const [companies, setCompanies] = useState<Target[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+
+  const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(initPerms);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
 
-  const initPermissions = useCallback(() => {
-    const init: Record<string, PermissionLevel> = {};
-    for (const f of ALL_FIELDS) init[f.key] = "edit";
-    setPermissions(init);
-  }, []);
+  // 現在の targetType と targetId を算出
+  const currentTargetType: string = mode;
+  const currentTargetId: string =
+    mode === "user_company"
+      ? selectedUserId && selectedCompanyId
+        ? `${selectedUserId}:${selectedCompanyId}`
+        : ""
+      : selectedId;
 
-  // 対象タイプ変更時にリストを取得
+  // 通常モード: 対象タイプ変更時にリストを取得
   useEffect(() => {
-    const fetchTargets = async () => {
+    if (mode === "user_company") return;
+    const fetch_ = async () => {
       setSelectedId("");
-      initPermissions();
+      setPermissions(initPerms());
 
-      const urlMap: Record<TargetType, string> = {
+      const urlMap: Record<string, string> = {
         user: "/api/settings/users",
         company: "/api/companies",
         position: "/api/positions",
       };
 
       try {
-        const res = await fetch(urlMap[targetType]);
+        const res = await fetch(urlMap[mode]);
         if (!res.ok) return;
         const data = await res.json();
 
         let list: Target[] = [];
-        if (targetType === "user") {
+        if (mode === "user") {
           list = (data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name }));
-        } else if (targetType === "company") {
+        } else if (mode === "company") {
           const arr = Array.isArray(data) ? data : (data.companies || []);
           list = arr.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }));
-        } else if (targetType === "position") {
+        } else if (mode === "position") {
           const arr = Array.isArray(data) ? data : (data.positions || []);
           list = arr.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }));
         }
@@ -79,27 +98,74 @@ export function PermissionsTab() {
         console.error(e);
       }
     };
-    fetchTargets();
-  }, [targetType, initPermissions]);
+    fetch_();
+  }, [mode]);
 
-  // 対象選択時に権限を読み込み
+  // user_company モード: ユーザーと会社のリストを取得
   useEffect(() => {
+    if (mode !== "user_company") return;
+    const fetch_ = async () => {
+      setSelectedUserId("");
+      setSelectedCompanyId("");
+      setPermissions(initPerms());
+      try {
+        const [uRes, cRes] = await Promise.all([
+          fetch("/api/settings/users"),
+          fetch("/api/companies"),
+        ]);
+        if (uRes.ok) {
+          const data = await uRes.json();
+          setUsers((data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })));
+        }
+        if (cRes.ok) {
+          const data = await cRes.json();
+          const arr = Array.isArray(data) ? data : (data.companies || []);
+          setCompanies(arr.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetch_();
+  }, [mode]);
+
+  // 通常モード: 対象選択時に権限を読み込み
+  useEffect(() => {
+    if (mode === "user_company") return;
     if (!selectedId) {
-      initPermissions();
+      setPermissions(initPerms());
       return;
     }
     const load = async () => {
-      const res = await fetch(`/api/permissions?targetType=${targetType}&targetId=${selectedId}`);
+      const res = await fetch(`/api/permissions?targetType=${mode}&targetId=${selectedId}`);
       if (!res.ok) return;
       const { permissions: loaded } = await res.json();
-
-      const perms: Record<string, PermissionLevel> = {};
-      for (const f of ALL_FIELDS) perms[f.key] = "edit"; // デフォルト
+      const perms = initPerms();
       for (const p of loaded) perms[p.fieldKey] = p.level as PermissionLevel;
       setPermissions(perms);
     };
     load();
-  }, [selectedId, targetType, initPermissions]);
+  }, [selectedId, mode]);
+
+  // user_company モード: 両方選択時に権限を読み込み
+  const loadUserCompanyPerms = useCallback(async () => {
+    if (!selectedUserId || !selectedCompanyId) {
+      setPermissions(initPerms());
+      return;
+    }
+    const targetId = `${selectedUserId}:${selectedCompanyId}`;
+    const res = await fetch(`/api/permissions?targetType=user_company&targetId=${encodeURIComponent(targetId)}`);
+    if (!res.ok) return;
+    const { permissions: loaded } = await res.json();
+    const perms = initPerms();
+    for (const p of loaded) perms[p.fieldKey] = p.level as PermissionLevel;
+    setPermissions(perms);
+  }, [selectedUserId, selectedCompanyId]);
+
+  useEffect(() => {
+    if (mode !== "user_company") return;
+    loadUserCompanyPerms();
+  }, [mode, loadUserCompanyPerms]);
 
   const setField = (key: string, level: PermissionLevel) =>
     setPermissions((prev) => ({ ...prev, [key]: level }));
@@ -111,14 +177,12 @@ export function PermissionsTab() {
       return next;
     });
 
-  const setAll = (level: PermissionLevel) => {
-    const next: Record<string, PermissionLevel> = {};
-    for (const f of ALL_FIELDS) next[f.key] = level;
-    setPermissions(next);
-  };
+  const setAll = (level: PermissionLevel) => setPermissions(
+    Object.fromEntries(ALL_FIELDS.map((f) => [f.key, level])) as Record<string, PermissionLevel>
+  );
 
   const handleSave = async () => {
-    if (!selectedId) return;
+    if (!currentTargetId) return;
     setSaving(true);
     setSaveMsg("");
     try {
@@ -126,7 +190,11 @@ export function PermissionsTab() {
       const res = await fetch("/api/permissions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetType, targetId: selectedId, permissions: permsArray }),
+        body: JSON.stringify({
+          targetType: currentTargetType,
+          targetId: currentTargetId,
+          permissions: permsArray,
+        }),
       });
       if (res.ok) {
         setSaveMsg("保存しました");
@@ -143,9 +211,11 @@ export function PermissionsTab() {
     hidden: "text-red-500",
   };
 
+  const isReadyToEdit = !!currentTargetId;
+
   return (
     <div className="space-y-4">
-      {/* 対象タイプ選択 */}
+      {/* モード選択 */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -154,44 +224,82 @@ export function PermissionsTab() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* タイプ切り替えボタン */}
+          {/* モード切り替えボタン */}
           <div>
-            <Label className="text-sm text-muted-foreground mb-2 block">対象タイプ</Label>
+            <Label className="text-sm text-muted-foreground mb-2 block">設定対象</Label>
             <div className="flex flex-wrap gap-2">
-              {TARGET_TYPES.map((type) => (
+              {MODES.map((m) => (
                 <Button
-                  key={type}
-                  variant={targetType === type ? "default" : "outline"}
+                  key={m}
+                  variant={mode === m ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setTargetType(type)}
+                  onClick={() => setMode(m)}
                 >
-                  {TARGET_TYPE_LABELS[type]}
+                  {TARGET_TYPE_LABELS[m]}
                 </Button>
               ))}
             </div>
           </div>
 
-          {/* 対象選択 */}
-          <div>
-            <Label className="text-sm text-muted-foreground mb-1 block">対象を選択</Label>
-            <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger className="w-full max-w-sm">
-                <SelectValue placeholder="選択してください" />
-              </SelectTrigger>
-              <SelectContent>
-                {targets.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* 通常モード: 対象選択 */}
+          {mode !== "user_company" && (
+            <div>
+              <Label className="text-sm text-muted-foreground mb-1 block">対象を選択</Label>
+              <Select value={selectedId} onValueChange={setSelectedId}>
+                <SelectTrigger className="w-full max-w-sm">
+                  <SelectValue placeholder="選択してください" />
+                </SelectTrigger>
+                <SelectContent>
+                  {targets.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* user_company モード: ユーザー + 会社の2つのドロップダウン */}
+          {mode === "user_company" && (
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm text-muted-foreground mb-1 block">ユーザーを選択</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="ユーザーを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm text-muted-foreground mb-1 block">会社を選択</Label>
+                <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="会社を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* 権限テーブル */}
-      {selectedId && (
+      {isReadyToEdit && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -281,7 +389,7 @@ export function PermissionsTab() {
             {/* 保存ボタン */}
             <div className="flex items-center justify-end gap-3 pt-2">
               {saveMsg && <span className="text-green-600 text-sm">{saveMsg}</span>}
-              <Button onClick={handleSave} disabled={saving || !selectedId}>
+              <Button onClick={handleSave} disabled={saving || !isReadyToEdit}>
                 {saving ? "保存中..." : "保存する"}
               </Button>
             </div>
