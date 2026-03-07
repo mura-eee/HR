@@ -874,7 +874,6 @@ export default function SettingsPage() {
                     <TableRow>
                       <TableHead>名前</TableHead>
                       <TableHead>メールアドレス</TableHead>
-                      <TableHead>関連社員</TableHead>
                       <TableHead>ロール</TableHead>
                       <TableHead className="text-right">操作</TableHead>
                     </TableRow>
@@ -884,11 +883,6 @@ export default function SettingsPage() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          {user.employee
-                            ? `${user.employee.lastName} ${user.employee.firstName}`
-                            : "-"}
-                        </TableCell>
                         <TableCell>
                           <Select
                             value={user.role}
