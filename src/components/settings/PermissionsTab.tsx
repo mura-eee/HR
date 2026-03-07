@@ -39,22 +39,44 @@ function initPerms(): Record<string, PermissionLevel> {
   return init;
 }
 
-export function PermissionsTab() {
-  const [mode, setMode] = useState<Mode>("user");
+interface PermissionsTabProps {
+  initialUserId?: string;
+  initialMode?: Mode;
+}
+
+export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabProps = {}) {
+  const [mode, setMode] = useState<Mode>(initialMode ?? "user");
 
   // 通常モード用
   const [targets, setTargets] = useState<Target[]>([]);
-  const [selectedId, setSelectedId] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string>(
+    (!initialMode || initialMode === "user") && initialUserId ? initialUserId : ""
+  );
 
   // user_company モード用
   const [users, setUsers] = useState<Target[]>([]);
   const [companies, setCompanies] = useState<Target[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedUserId, setSelectedUserId] = useState<string>(
+    initialMode === "user_company" && initialUserId ? initialUserId : ""
+  );
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
 
   const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(initPerms);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+
+  // 外部から initialUserId が変わった場合に反映
+  useEffect(() => {
+    if (!initialUserId) return;
+    const newMode = initialMode ?? "user";
+    setMode(newMode);
+    if (!initialMode || initialMode === "user") {
+      setSelectedId(initialUserId);
+    } else if (initialMode === "user_company") {
+      setSelectedUserId(initialUserId);
+      setSelectedCompanyId("");
+    }
+  }, [initialUserId, initialMode]);
 
   // 現在の targetType と targetId を算出
   const currentTargetType: string = mode;

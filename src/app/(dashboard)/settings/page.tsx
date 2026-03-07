@@ -130,6 +130,7 @@ export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("users");
+  const [permissionTargetUserId, setPermissionTargetUserId] = useState<string | undefined>(undefined);
 
   // Check admin role
   useEffect(() => {
@@ -906,13 +907,26 @@ export default function SettingsPage() {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteUser(user.id, user.name)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="権限設定"
+                              onClick={() => {
+                                setPermissionTargetUserId(user.id);
+                                setActiveTab("permissions");
+                              }}
+                            >
+                              <Shield className="w-4 h-4 text-blue-500" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteUser(user.id, user.name)}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1327,7 +1341,7 @@ export default function SettingsPage() {
 
         {/* ===== 権限設定 Tab ===== */}
         <TabsContent value="permissions">
-          <PermissionsTab />
+          <PermissionsTab initialUserId={permissionTargetUserId} initialMode="user" />
         </TabsContent>
       </Tabs>
 
