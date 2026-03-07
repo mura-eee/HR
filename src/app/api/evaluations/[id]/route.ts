@@ -211,6 +211,33 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    // 関連データを先に削除してから評価本体を削除
+    await prisma.competencyEvaluation.deleteMany({ where: { evaluationId: id } });
+    await prisma.kpiGoal.deleteMany({ where: { evaluationId: id } });
+    await prisma.evaluation.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete evaluation:", error);
+    return NextResponse.json(
+      { error: "評価の削除に失敗しました" },
+      { status: 500 }
+    );
+  }
+}
+
 async function recalculateEvaluationScores(evaluationId: string) {
   const competencyEvals = await prisma.competencyEvaluation.findMany({
     where: { evaluationId },

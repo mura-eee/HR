@@ -66,6 +66,7 @@ export const FIELD_GROUPS: FieldGroup[] = [
   {
     group: "評価情報",
     fields: [
+      { key: "evaluationManage", label: "評価 操作権限（編集可能=編集・削除可 / 閲覧のみ=編集可・削除不可 / 非表示=閲覧のみ）" },
       { key: "evaluationCompetency", label: "コンピテンシー評価" },
       { key: "evaluationKpi", label: "KPI評価" },
       { key: "evaluationSummary", label: "評価サマリー（スコア・ランク）" },

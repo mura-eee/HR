@@ -39,7 +39,9 @@ import {
   Plus,
   ExternalLink,
   Filter,
+  Trash2,
 } from "lucide-react";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 
 interface EvaluationListItem {
   id: string;
@@ -109,6 +111,7 @@ const rankColors: Record<string, string> = {
 };
 
 export default function EvaluationsPage() {
+  const { can } = useFieldPermissions();
   const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
   const [periods, setPeriods] = useState<EvaluationPeriod[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -116,7 +119,11 @@ export default function EvaluationsPage() {
   const [filterPeriod, setFilterPeriod] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
-  // Dialog state
+  // 削除ダイアログ
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // 新規作成ダイアログ
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -173,6 +180,23 @@ export default function EvaluationsPage() {
     setLoading(true);
     fetchEvaluations();
   }, [fetchEvaluations]);
+
+  const handleDelete = async () => {
+    if (!deleteTargetId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/evaluations/${deleteTargetId}`, { method: "DELETE" });
+      if (res.ok) {
+        setDeleteTargetId(null);
+        fetchEvaluations();
+      } else {
+        const data = await res.json();
+        alert(data.error || "削除に失敗しました");
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!selectedEmployee || !selectedPeriod) return;
@@ -391,12 +415,24 @@ export default function EvaluationsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Link href={`/evaluations/${evaluation.id}`}>
-                        <Button variant="ghost" size="sm">
-                          <ExternalLink className="w-4 h-4 mr-1" />
-                          詳細
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-center gap-1">
+                        <Link href={`/evaluations/${evaluation.id}`}>
+                          <Button variant="ghost" size="sm">
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            詳細
+                          </Button>
+                        </Link>
+                        {can("evaluationManage") === "edit" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setDeleteTargetId(evaluation.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -405,6 +441,26 @@ export default function EvaluationsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 削除確認ダイアログ */}
+      <Dialog open={!!deleteTargetId} onOpenChange={(open) => { if (!open) setDeleteTargetId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>評価を削除しますか？</DialogTitle>
+            <DialogDescription>
+              この操作は元に戻せません。評価データ（コンピテンシー評価・KPI目標を含む）がすべて削除されます。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTargetId(null)}>
+              キャンセル
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "削除中..." : "削除する"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

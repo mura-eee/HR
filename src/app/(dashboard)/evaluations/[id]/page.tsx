@@ -311,7 +311,14 @@ export default function EvaluationDetailPage() {
   const totalScore = Math.round((competencySubtotal + kpiSubtotal) * 10) / 10;
   const currentRank = getRankFromScore(totalScore);
 
-  const isReadOnly = evaluation?.status === "COMPLETED";
+  // evaluationManage 権限: edit=編集・削除可, view=編集可（削除不可）, hidden=閲覧のみ
+  const evalManage = can("evaluationManage");
+  const isReadOnly = evaluation?.status === "COMPLETED" || evalManage === "hidden";
+  const canDelete = evalManage === "edit";
+
+  // 削除ダイアログ
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ---------- Auto-save on blur ----------
 
@@ -392,6 +399,24 @@ export default function EvaluationDetailPage() {
     },
     [evaluation, evaluationId, kpiData, isReadOnly]
   );
+
+  // ---------- Evaluation Delete ----------
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/evaluations/${evaluationId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/evaluations");
+      } else {
+        const data = await res.json();
+        alert(data.error || "削除に失敗しました");
+      }
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
 
   // ---------- Status Transition ----------
 
@@ -518,12 +543,20 @@ export default function EvaluationDetailPage() {
           )}
         </div>
 
-        {!isReadOnly && statusFlow[evaluation.status] && (
-          <Button onClick={() => setStatusDialogOpen(true)}>
-            {statusFlow[evaluation.status].label}
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canDelete && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="w-4 h-4 mr-1" />
+              削除
+            </Button>
+          )}
+          {!isReadOnly && statusFlow[evaluation.status] && (
+            <Button onClick={() => setStatusDialogOpen(true)}>
+              {statusFlow[evaluation.status].label}
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* =============== SECTION 1: Header =============== */}
@@ -1382,6 +1415,26 @@ export default function EvaluationDetailPage() {
             </Button>
             <Button onClick={handleAddKpiGoal} disabled={!newKpiTitle.trim() || saving}>
               {saving ? "追加中..." : "追加"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* =============== Delete Evaluation Confirmation Dialog =============== */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>評価を削除しますか？</DialogTitle>
+            <DialogDescription>
+              この操作は元に戻せません。評価データ（コンピテンシー評価・KPI目標を含む）がすべて削除されます。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              キャンセル
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "削除中..." : "削除する"}
             </Button>
           </DialogFooter>
         </DialogContent>
