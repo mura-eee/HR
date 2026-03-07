@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
 
     const lastName = String(row["姓"] ?? "").trim();
     const firstName = String(row["名"] ?? "").trim();
-    const email = String(row["メールアドレス"] ?? "").trim();
+    const email = String(row["メールアドレス"] ?? "").trim() || null;
 
-    if (!lastName || !firstName || !email) {
-      results.errors.push(`社員コード ${employeeCode}: 姓・名・メールアドレスは必須です`);
+    if (!lastName || !firstName) {
+      results.errors.push(`社員コード ${employeeCode}: 姓・名は必須です`);
       continue;
     }
 
