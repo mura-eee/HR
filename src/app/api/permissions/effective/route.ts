@@ -36,8 +36,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ permissions: all });
   }
 
-  // 対象リストを優先度順に構築（user_company > user_department > user > company > position）
+  // 対象リストを優先度順に構築
   const targets: { type: string; id: string }[] = [];
+
+  // user_company_department: ログインユーザー × 所属会社 × 部署（最高優先度）
+  if (companyId && departmentId) {
+    targets.push({ type: "user_company_department", id: `${user.id}:${companyId}:${departmentId}` });
+  }
 
   // user_company: ログインユーザー × 閲覧中の社員の所属会社
   if (companyId) {
