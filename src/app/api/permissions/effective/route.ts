@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const companyId = searchParams.get("companyId");
+  const departmentId = searchParams.get("departmentId");
 
   const user = await prisma.user.findUnique({
     where: { email: session.user?.email ?? "" },
@@ -35,12 +36,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ permissions: all });
   }
 
-  // 対象リストを優先度順に構築（user_company > user > company > position）
+  // 対象リストを優先度順に構築（user_company > user_department > user > company > position）
   const targets: { type: string; id: string }[] = [];
 
   // user_company: ログインユーザー × 閲覧中の社員の所属会社
   if (companyId) {
     targets.push({ type: "user_company", id: `${user.id}:${companyId}` });
+  }
+
+  // user_department: ログインユーザー × 閲覧中の社員の部署
+  if (departmentId) {
+    targets.push({ type: "user_department", id: `${user.id}:${departmentId}` });
   }
 
   targets.push({ type: "user", id: user.id });

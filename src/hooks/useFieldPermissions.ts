@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PermissionLevel, ALL_FIELDS } from "@/lib/field-permissions";
 
-export function useFieldPermissions(companyId?: string | null) {
+export function useFieldPermissions(companyId?: string | null, departmentId?: string | null) {
   const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(() => {
     const init: Record<string, PermissionLevel> = {};
     for (const f of ALL_FIELDS) init[f.key] = "edit";
@@ -14,9 +14,11 @@ export function useFieldPermissions(companyId?: string | null) {
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const url = companyId
-          ? `/api/permissions/effective?companyId=${encodeURIComponent(companyId)}`
-          : "/api/permissions/effective";
+        const params = new URLSearchParams();
+        if (companyId) params.set("companyId", companyId);
+        if (departmentId) params.set("departmentId", departmentId);
+        const query = params.toString();
+        const url = query ? `/api/permissions/effective?${query}` : "/api/permissions/effective";
         const res = await fetch(url);
         if (res.ok) {
           const { permissions: perms } = await res.json();
@@ -27,7 +29,7 @@ export function useFieldPermissions(companyId?: string | null) {
       }
     };
     fetch_();
-  }, [companyId]);
+  }, [companyId, departmentId]);
 
   // フィールドの権限レベルを返す（デフォルト: edit）
   const can = (fieldKey: string): PermissionLevel =>

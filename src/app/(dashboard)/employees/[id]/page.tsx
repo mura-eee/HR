@@ -162,7 +162,7 @@ export default function EmployeeDetailPage() {
   const id = params.id as string;
 
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const { can } = useFieldPermissions(employee?.company?.id ?? null);
+  const { can } = useFieldPermissions(employee?.company?.id ?? null, employee?.department?.id ?? null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

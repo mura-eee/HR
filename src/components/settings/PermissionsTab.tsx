@@ -27,11 +27,13 @@ interface Target {
 }
 
 // 通常モード: user / company / position
-// 複合モード: user_company (ユーザー × 会社別)
+// 複合モード: user_company / user_department
 type Mode = TargetType;
 
-const MODES: Mode[] = ["user", "company", "position", "user_company"];
+const MODES: Mode[] = ["user", "company", "position", "user_company", "user_department"];
 const LEVELS: PermissionLevel[] = ["edit", "view", "hidden"];
+
+const COMPOSITE_MODES: Mode[] = ["user_company", "user_department"];
 
 function initPerms(): Record<string, PermissionLevel> {
   const init: Record<string, PermissionLevel> = {};
@@ -53,13 +55,19 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
     (!initialMode || initialMode === "user") && initialUserId ? initialUserId : ""
   );
 
-  // user_company モード用
+  // 複合モード共通: ユーザーリスト
   const [users, setUsers] = useState<Target[]>([]);
-  const [companies, setCompanies] = useState<Target[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>(
-    initialMode === "user_company" && initialUserId ? initialUserId : ""
+    COMPOSITE_MODES.includes(initialMode as Mode) && initialUserId ? initialUserId : ""
   );
+
+  // user_company モード用
+  const [companies, setCompanies] = useState<Target[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+
+  // user_department モード用
+  const [departments, setDepartments] = useState<Target[]>([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string>("");
 
   const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(initPerms);
   const [saving, setSaving] = useState(false);
@@ -72,24 +80,28 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
     setMode(newMode);
     if (!initialMode || initialMode === "user") {
       setSelectedId(initialUserId);
-    } else if (initialMode === "user_company") {
+    } else if (COMPOSITE_MODES.includes(newMode)) {
       setSelectedUserId(initialUserId);
       setSelectedCompanyId("");
+      setSelectedDepartmentId("");
     }
   }, [initialUserId, initialMode]);
 
   // 現在の targetType と targetId を算出
   const currentTargetType: string = mode;
-  const currentTargetId: string =
-    mode === "user_company"
-      ? selectedUserId && selectedCompanyId
-        ? `${selectedUserId}:${selectedCompanyId}`
-        : ""
-      : selectedId;
+  const currentTargetId: string = (() => {
+    if (mode === "user_company") {
+      return selectedUserId && selectedCompanyId ? `${selectedUserId}:${selectedCompanyId}` : "";
+    }
+    if (mode === "user_department") {
+      return selectedUserId && selectedDepartmentId ? `${selectedUserId}:${selectedDepartmentId}` : "";
+    }
+    return selectedId;
+  })();
 
   // 通常モード: 対象タイプ変更時にリストを取得
   useEffect(() => {
-    if (mode === "user_company") return;
+    if (COMPOSITE_MODES.includes(mode)) return;
     const fetch_ = async () => {
       setSelectedId("");
       setPermissions(initPerms());
@@ -123,24 +135,35 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
     fetch_();
   }, [mode]);
 
-  // user_company モード: ユーザーと会社のリストを取得
+  // 複合モード: ユーザーリストを取得（user_company / user_department 共通）
   useEffect(() => {
-    if (mode !== "user_company") return;
+    if (!COMPOSITE_MODES.includes(mode)) return;
     const fetch_ = async () => {
       setSelectedUserId("");
       setSelectedCompanyId("");
+      setSelectedDepartmentId("");
       setPermissions(initPerms());
       try {
-        const [uRes, cRes] = await Promise.all([
-          fetch("/api/settings/users"),
-          fetch("/api/companies"),
-        ]);
-        if (uRes.ok) {
-          const data = await uRes.json();
+        const res = await fetch("/api/settings/users");
+        if (res.ok) {
+          const data = await res.json();
           setUsers((data.users || []).map((u: { id: string; name: string }) => ({ id: u.id, name: u.name })));
         }
-        if (cRes.ok) {
-          const data = await cRes.json();
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetch_();
+  }, [mode]);
+
+  // user_company モード: 会社リストを取得
+  useEffect(() => {
+    if (mode !== "user_company") return;
+    const fetch_ = async () => {
+      try {
+        const res = await fetch("/api/companies");
+        if (res.ok) {
+          const data = await res.json();
           const arr = Array.isArray(data) ? data : (data.companies || []);
           setCompanies(arr.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })));
         }
@@ -151,9 +174,27 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
     fetch_();
   }, [mode]);
 
+  // user_department モード: 部署リストを取得
+  useEffect(() => {
+    if (mode !== "user_department") return;
+    const fetch_ = async () => {
+      try {
+        const res = await fetch("/api/departments");
+        if (res.ok) {
+          const data = await res.json();
+          const arr = data.departments || [];
+          setDepartments(arr.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetch_();
+  }, [mode]);
+
   // 通常モード: 対象選択時に権限を読み込み
   useEffect(() => {
-    if (mode === "user_company") return;
+    if (COMPOSITE_MODES.includes(mode)) return;
     if (!selectedId) {
       setPermissions(initPerms());
       return;
@@ -169,25 +210,26 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
     load();
   }, [selectedId, mode]);
 
-  // user_company モード: 両方選択時に権限を読み込み
-  const loadUserCompanyPerms = useCallback(async () => {
-    if (!selectedUserId || !selectedCompanyId) {
+  // 複合モード: 両方選択時に権限を読み込み
+  const loadCompositePerms = useCallback(async () => {
+    if (!currentTargetId) {
       setPermissions(initPerms());
       return;
     }
-    const targetId = `${selectedUserId}:${selectedCompanyId}`;
-    const res = await fetch(`/api/permissions?targetType=user_company&targetId=${encodeURIComponent(targetId)}`);
+    const res = await fetch(
+      `/api/permissions?targetType=${currentTargetType}&targetId=${encodeURIComponent(currentTargetId)}`
+    );
     if (!res.ok) return;
     const { permissions: loaded } = await res.json();
     const perms = initPerms();
     for (const p of loaded) perms[p.fieldKey] = p.level as PermissionLevel;
     setPermissions(perms);
-  }, [selectedUserId, selectedCompanyId]);
+  }, [currentTargetId, currentTargetType]);
 
   useEffect(() => {
-    if (mode !== "user_company") return;
-    loadUserCompanyPerms();
-  }, [mode, loadUserCompanyPerms]);
+    if (!COMPOSITE_MODES.includes(mode)) return;
+    loadCompositePerms();
+  }, [mode, loadCompositePerms]);
 
   const setField = (key: string, level: PermissionLevel) =>
     setPermissions((prev) => ({ ...prev, [key]: level }));
@@ -264,7 +306,7 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
           </div>
 
           {/* 通常モード: 対象選択 */}
-          {mode !== "user_company" && (
+          {!COMPOSITE_MODES.includes(mode) && (
             <div>
               <Label className="text-sm text-muted-foreground mb-1 block">対象を選択</Label>
               <Select value={selectedId} onValueChange={setSelectedId}>
@@ -310,6 +352,42 @@ export function PermissionsTab({ initialUserId, initialMode }: PermissionsTabPro
                     {companies.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
                         {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* user_department モード: ユーザー + 部署の2つのドロップダウン */}
+          {mode === "user_department" && (
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm text-muted-foreground mb-1 block">ユーザーを選択</Label>
+                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="ユーザーを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-sm text-muted-foreground mb-1 block">部署を選択</Label>
+                <Select value={selectedDepartmentId} onValueChange={setSelectedDepartmentId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="部署を選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -110,7 +110,7 @@ export default function EditEmployeePage() {
     isActive: true,
   });
 
-  const { can } = useFieldPermissions(form.companyId || null);
+  const { can } = useFieldPermissions(form.companyId || null, form.departmentId || null);
 
   const fetchEmployee = useCallback(async () => {
     try {
