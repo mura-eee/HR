@@ -48,8 +48,10 @@ import {
   Calendar,
   BarChart3,
   Shield,
+  Database,
 } from "lucide-react";
 import { PermissionsTab } from "@/components/settings/PermissionsTab";
+import { BackupTab } from "@/components/settings/BackupTab";
 
 // ===== Types =====
 
@@ -788,6 +790,10 @@ export default function SettingsPage() {
             <Shield className="w-4 h-4" />
             権限設定
           </TabsTrigger>
+          <TabsTrigger value="backup" className="gap-1">
+            <Database className="w-4 h-4" />
+            バックアップ
+          </TabsTrigger>
         </TabsList>
 
         {/* ===== ユーザー管理 Tab ===== */}
@@ -1336,6 +1342,11 @@ export default function SettingsPage() {
         {/* ===== 権限設定 Tab ===== */}
         <TabsContent value="permissions">
           <PermissionsTab initialUserId={permissionTargetUserId} initialMode="user" />
+        </TabsContent>
+
+        {/* ===== バックアップ Tab ===== */}
+        <TabsContent value="backup">
+          <BackupTab />
         </TabsContent>
       </Tabs>
 

@@ -245,6 +245,16 @@ model FieldPermission {
   @@unique([targetType, targetId, fieldKey])
 }
 
+model Backup {
+  id        String   @id @default(cuid())
+  name      String
+  type      String   @default("manual") // "manual" | "auto"
+  note      String?
+  sizeBytes Int      @default(0)
+  data      Json
+  createdAt DateTime @default(now())
+}
+
 model KpiGoal {
   id           String     @id @default(cuid())
   evaluationId String
