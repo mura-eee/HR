@@ -234,14 +234,18 @@ export default function EmployeesPage() {
             className="hidden"
             onChange={handleImport}
           />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-            <Upload className="mr-2 h-4 w-4" />
-            {importing ? "取込中..." : "Excel取込"}
-          </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Excel出力
-          </Button>
+          {can("employeeImport") !== "hidden" && (
+            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+              <Upload className="mr-2 h-4 w-4" />
+              {importing ? "取込中..." : "Excel取込"}
+            </Button>
+          )}
+          {can("employeeExport") !== "hidden" && (
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="mr-2 h-4 w-4" />
+              Excel出力
+            </Button>
+          )}
           <Link href="/employees/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />

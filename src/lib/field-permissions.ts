@@ -73,6 +73,15 @@ export const FIELD_GROUPS: FieldGroup[] = [
       { key: "evaluationSalaryStep", label: "号俸変動" },
     ],
   },
+  {
+    group: "データ操作",
+    fields: [
+      { key: "employeeImport", label: "社員データ取込（Excel取込ボタン）" },
+      { key: "employeeExport", label: "社員データ出力（Excel出力ボタン）" },
+      { key: "qualificationImport", label: "資格データ取込（Excel取込ボタン）" },
+      { key: "qualificationExport", label: "資格データ出力（Excel出力ボタン）" },
+    ],
+  },
 ];
 
 export const ALL_FIELDS: FieldDef[] = FIELD_GROUPS.flatMap((g) => g.fields);

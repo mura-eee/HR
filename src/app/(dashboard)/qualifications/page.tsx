@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useSession } from "next-auth/react";
+import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 import { useSearchParams } from "next/navigation";
 import {
   Card,
@@ -103,6 +104,7 @@ function getExpiryStatus(expiryDate: string | null): "expired" | "soon" | "valid
 
 function QualificationsContent() {
   const { data: session } = useSession();
+  const { can } = useFieldPermissions();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") === "employee" ? "employee" : "master"
@@ -504,14 +506,18 @@ function QualificationsContent() {
                   className="hidden"
                   onChange={handleImport}
                 />
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-                  <Upload className="w-4 h-4 mr-1" />
-                  {importing ? "取込中..." : "Excel取込"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleExport}>
-                  <Download className="w-4 h-4 mr-1" />
-                  Excel出力
-                </Button>
+                {can("qualificationImport") !== "hidden" && (
+                  <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+                    <Upload className="w-4 h-4 mr-1" />
+                    {importing ? "取込中..." : "Excel取込"}
+                  </Button>
+                )}
+                {can("qualificationExport") !== "hidden" && (
+                  <Button variant="outline" size="sm" onClick={handleExport}>
+                    <Download className="w-4 h-4 mr-1" />
+                    Excel出力
+                  </Button>
+                )}
                 <Button onClick={openEmpQualDialog} size="sm">
                   <Plus className="w-4 h-4 mr-1" />
                   資格割当
