@@ -40,6 +40,7 @@ import {
   ExternalLink,
   Filter,
   Trash2,
+  Upload,
 } from "lucide-react";
 import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 
@@ -118,6 +119,15 @@ export default function EvaluationsPage() {
   const [loading, setLoading] = useState(true);
   const [filterPeriod, setFilterPeriod] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+
+  // 評価シート一括取込
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{
+    results: { file: string; status: string; message?: string }[];
+    successCount: number;
+    total: number;
+  } | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // 削除ダイアログ
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -198,6 +208,21 @@ export default function EvaluationsPage() {
     }
   };
 
+  const handleImport = async () => {
+    setImporting(true);
+    try {
+      const res = await fetch("/api/admin/import-evaluation-sheets", {
+        method: "POST",
+      });
+      const data = await res.json();
+      setImportResult(data);
+      setImportDialogOpen(true);
+      if (data.successCount > 0) fetchEvaluations();
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleCreate = async () => {
     if (!selectedEmployee || !selectedPeriod) return;
     setCreating(true);
@@ -240,6 +265,11 @@ export default function EvaluationsPage() {
           <p className="text-muted-foreground">社員の人事評価を管理します</p>
         </div>
 
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleImport} disabled={importing}>
+            <Upload className="w-4 h-4 mr-2" />
+            {importing ? "取込中..." : "評価シート一括取込"}
+          </Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -303,7 +333,51 @@ export default function EvaluationsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* 取込結果ダイアログ */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>評価シート取込結果</DialogTitle>
+            <DialogDescription>
+              {importResult
+                ? `${importResult.total}件中 ${importResult.successCount}件 成功`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          {importResult && (
+            <div className="space-y-1 text-sm">
+              {importResult.results.map((r, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-2 py-1 border-b last:border-0 ${
+                    r.status === "error" ? "text-destructive" : "text-green-700"
+                  }`}
+                >
+                  <span className="font-medium shrink-0">
+                    {r.status === "success" ? "✓" : "✗"}
+                  </span>
+                  <div>
+                    <div className="font-medium truncate max-w-md">
+                      {r.file}
+                    </div>
+                    {r.message && (
+                      <div className="text-xs text-muted-foreground">
+                        {r.message}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setImportDialogOpen(false)}>閉じる</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <Card>
