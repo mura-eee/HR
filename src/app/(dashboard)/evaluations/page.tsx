@@ -41,6 +41,7 @@ import {
   Filter,
   Trash2,
   Upload,
+  Download,
 } from "lucide-react";
 import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 
@@ -269,6 +270,18 @@ export default function EvaluationsPage() {
           <Button variant="outline" onClick={handleImport} disabled={importing}>
             <Upload className="w-4 h-4 mr-2" />
             {importing ? "取込中..." : "評価シート一括取込"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const params = filterPeriod && filterPeriod !== "all"
+                ? `?periodId=${filterPeriod}`
+                : "";
+              window.location.href = `/api/admin/export-evaluation-sheets${params}`;
+            }}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Excel出力
           </Button>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>

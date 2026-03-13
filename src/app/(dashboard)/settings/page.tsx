@@ -1119,7 +1119,7 @@ export default function SettingsPage() {
                         <TableCell className="font-medium">{period.name}</TableCell>
                         <TableCell>{period.year}年</TableCell>
                         <TableCell>
-                          {period.half === "FIRST" ? "上期" : "下期"}
+                          {period.half === "FIRST" ? "上期" : period.half === "SECOND" ? "下期" : "通期"}
                         </TableCell>
                         <TableCell>
                           {formatDate(period.assessmentStartDate)} ~{" "}
@@ -1579,6 +1579,7 @@ export default function SettingsPage() {
                   <SelectContent>
                     <SelectItem value="FIRST">上期</SelectItem>
                     <SelectItem value="SECOND">下期</SelectItem>
+                    <SelectItem value="ANNUAL">通期</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

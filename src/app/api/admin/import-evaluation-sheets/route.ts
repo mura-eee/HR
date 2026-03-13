@@ -118,9 +118,25 @@ export async function POST(request: NextRequest) {
       }
 
       const year = assessmentStart.getUTCFullYear();
-      // If assessment ends before October (month index < 9) → 前期, else 後期
-      const half = assessmentEnd.getUTCMonth() < 9 ? "前期" : "後期";
-      const periodName = `${year}年度 ${half}`;
+      // Determine half: FIRST=上期(ends Sep or earlier), SECOND=下期, ANNUAL=通期
+      const endMonth = assessmentEnd.getUTCMonth(); // 0-indexed
+      const spanMonths =
+        (assessmentEnd.getUTCFullYear() - assessmentStart.getUTCFullYear()) * 12 +
+        (assessmentEnd.getUTCMonth() - assessmentStart.getUTCMonth());
+      let half: string;
+      let halfLabel: string;
+      if (spanMonths >= 11) {
+        half = "ANNUAL";
+        halfLabel = "通期";
+      } else if (endMonth <= 8) {
+        // ends in Jan-Sep → 上期
+        half = "FIRST";
+        halfLabel = "上期";
+      } else {
+        half = "SECOND";
+        halfLabel = "下期";
+      }
+      const periodName = `${year}年度 ${halfLabel}`;
 
       let period = await prisma.evaluationPeriod.findFirst({
         where: {
