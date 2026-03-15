@@ -45,15 +45,37 @@ function cellNum(ws: XLSX.WorkSheet, row: number, col: number): number | null {
 type ImportResult = { file: string; status: "success" | "error"; message?: string };
 
 async function processSheet(ws: XLSX.WorkSheet, filename: string): Promise<ImportResult> {
-  const codeMatch = filename.match(/（(\d+)_/);
-  if (!codeMatch) {
-    return { file: filename, status: "error", message: "ファイル名から社員コードを取得できません" };
+  // 1st priority: read employee code from cell Q4 (designated cell in sheet)
+  // 2nd priority: extract from filename pattern （XXXX_name）
+  // 3rd priority: look up by employee name in cell C4
+  let employeeCode: string | null = cellStr(ws, 4, 17) || null; // Q4
+  if (!employeeCode) {
+    const codeMatch = filename.match(/（(\d+)_/);
+    employeeCode = codeMatch ? codeMatch[1] : null;
   }
-  const employeeCode = codeMatch[1];
 
-  const employee = await prisma.employee.findUnique({ where: { employeeCode } });
+  let employee = null;
+  if (employeeCode) {
+    employee = await prisma.employee.findUnique({ where: { employeeCode } });
+  }
+  // Fallback: look up by full name (lastName + firstName)
   if (!employee) {
-    return { file: filename, status: "error", message: `社員コード「${employeeCode}」が存在しません` };
+    const rawName = cellStr(ws, 4, 3).replace(/[\s　]+/g, " ").trim();
+    const parts = rawName.split(" ");
+    if (parts.length >= 2) {
+      employee = await prisma.employee.findFirst({
+        where: { lastName: parts[0], firstName: parts[1] },
+      });
+    }
+  }
+  if (!employee) {
+    return {
+      file: filename,
+      status: "error",
+      message: employeeCode
+        ? `社員コード「${employeeCode}」が存在しません`
+        : "社員コード・氏名からの特定に失敗しました",
+    };
   }
 
   const assessmentStart = parseJapaneseDate(cellStr(ws, 3, 3));
