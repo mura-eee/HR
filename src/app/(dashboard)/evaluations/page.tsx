@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -122,6 +122,7 @@ export default function EvaluationsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   // 評価シート一括取込
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     results: { file: string; status: string; message?: string }[];
@@ -209,19 +210,50 @@ export default function EvaluationsPage() {
     }
   };
 
-  const handleImport = async () => {
+  const runImport = async (body: FormData | null) => {
     setImporting(true);
     try {
       const res = await fetch("/api/admin/import-evaluation-sheets", {
         method: "POST",
+        body: body ?? undefined,
       });
       const data = await res.json();
-      setImportResult(data);
+      if (data.results) {
+        setImportResult(data);
+      } else {
+        setImportResult({
+          results: [{ file: "-", status: "error", message: data.error || "エラーが発生しました" }],
+          successCount: 0,
+          total: 1,
+        });
+      }
       setImportDialogOpen(true);
-      if (data.successCount > 0) fetchEvaluations();
+      if ((data.successCount ?? 0) > 0) fetchEvaluations();
+    } catch {
+      setImportResult({
+        results: [{ file: "-", status: "error", message: "通信エラーが発生しました" }],
+        successCount: 0,
+        total: 1,
+      });
+      setImportDialogOpen(true);
     } finally {
       setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const formData = new FormData();
+    for (const file of Array.from(files)) {
+      formData.append("files", file);
+    }
+    await runImport(formData);
   };
 
   const handleCreate = async () => {
@@ -257,6 +289,15 @@ export default function EvaluationsPage() {
 
   return (
     <div className="space-y-6">
+      {/* hidden file input for evaluation sheet upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".xlsx"
+        multiple
+        className="hidden"
+        onChange={handleFileSelect}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
