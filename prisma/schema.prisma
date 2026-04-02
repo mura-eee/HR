@@ -51,6 +51,7 @@ model Employee {
   phone           String?
   hireDate        DateTime?
   birthDate       DateTime?
+  retirementDate  DateTime?
   gender          String?
   address         String?
   companyId       String?

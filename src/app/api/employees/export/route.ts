@@ -35,6 +35,7 @@ export async function GET() {
     "メールアドレス": emp.email || "",
     "電話番号": emp.phone || "",
     "入社日": formatDate(emp.hireDate),
+    "退職日": formatDate(emp.retirementDate),
     "生年月日": formatDate(emp.birthDate),
     "性別": emp.gender === "male" ? "男性" : emp.gender === "female" ? "女性" : emp.gender === "other" ? "その他" : "",
     "住所": emp.address || "",
@@ -80,7 +81,7 @@ export async function GET() {
   // Set column widths (43 columns)
   ws["!cols"] = [
     { wch: 12 }, { wch: 8 },  { wch: 8 },  { wch: 12 }, { wch: 12 }, // 社員コード, 姓, 名, 姓（カナ）, 名（カナ）
-    { wch: 24 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 8 },  // メール, 電話, 入社日, 生年月日, 性別
+    { wch: 24 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 8 },  // メール, 電話, 入社日, 退職日, 生年月日, 性別
     { wch: 30 },                                                        // 住所
     { wch: 16 }, { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, // 所属名, 部署コード, 部署名, 役職名, 職種名
     { wch: 6 },  { wch: 6 },  { wch: 10 }, { wch: 10 }, { wch: 10 }, // 等級, 号俸, 基本給, 資格手当, 役職手当

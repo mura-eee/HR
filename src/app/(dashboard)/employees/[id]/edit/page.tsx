@@ -71,6 +71,7 @@ export default function EditEmployeePage() {
     email: "",
     phone: "",
     hireDate: "",
+    retirementDate: "",
     birthDate: "",
     gender: "",
     address: "",
@@ -131,6 +132,7 @@ export default function EditEmployeePage() {
         email: data.email || "",
         phone: data.phone || "",
         hireDate: formatDateForInput(data.hireDate),
+        retirementDate: formatDateForInput(data.retirementDate),
         birthDate: formatDateForInput(data.birthDate),
         gender: data.gender || "",
         address: data.address || "",
@@ -482,6 +484,15 @@ export default function EditEmployeePage() {
                     />
                   </div>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="retirementDate">退職日</Label>
+                  <Input
+                    id="retirementDate"
+                    type="date"
+                    value={form.retirementDate}
+                    onChange={(e) => handleChange("retirementDate", e.target.value)}
+                  />
+                </div>
                 {can("birthDate") !== "hidden" && (
                   <div className="space-y-2">
                     <Label htmlFor="birthDate">生年月日</Label>

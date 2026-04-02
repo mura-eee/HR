@@ -145,18 +145,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate email only when a non-empty email is provided
-    if (email) {
-      const existingEmail = await prisma.employee.findFirst({
-        where: { email },
-      });
-      if (existingEmail) {
-        return NextResponse.json(
-          { error: "このメールアドレスは既に使用されています" },
-          { status: 400 }
-        );
-      }
-    }
+    // Email uniqueness is not enforced (placeholder emails are allowed)
 
     const employee = await prisma.employee.create({
       data: {

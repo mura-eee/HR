@@ -87,6 +87,7 @@ export async function PUT(
       phone,
       hireDate,
       birthDate,
+      retirementDate,
       gender,
       address,
       companyId,
@@ -145,18 +146,7 @@ export async function PUT(
       );
     }
 
-    // Check for duplicate email only when a non-empty email is provided
-    if (email) {
-      const duplicateEmail = await prisma.employee.findFirst({
-        where: { email, NOT: { id } },
-      });
-      if (duplicateEmail) {
-        return NextResponse.json(
-          { error: "このメールアドレスは既に使用されています" },
-          { status: 400 }
-        );
-      }
-    }
+    // Email uniqueness is not enforced (placeholder emails are allowed)
 
     const employee = await prisma.employee.update({
       where: { id },
@@ -170,6 +160,7 @@ export async function PUT(
         phone: phone || null,
         hireDate: hireDate ? new Date(hireDate) : null,
         birthDate: birthDate ? new Date(birthDate) : null,
+        retirementDate: retirementDate ? new Date(retirementDate) : (retirementDate === "" ? null : existing.retirementDate),
         gender: gender || null,
         address: address || null,
         companyId: companyId || null,

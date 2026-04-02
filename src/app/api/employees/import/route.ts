@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
       email,
       phone: String(row["電話番号"] ?? "").trim() || null,
       hireDate: parseDate(row["入社日"]),
+      retirementDate: parseDate(row["退職日"]),
       birthDate: parseDate(row["生年月日"]),
       gender,
       address: String(row["住所"] ?? "").trim() || null,
