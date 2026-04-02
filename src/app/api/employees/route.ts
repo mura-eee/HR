@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
       profileImage,
     } = body;
 
-    // Validate required fields
-    if (!employeeCode || !lastName || !firstName || !email) {
+    // Validate required fields (email is optional)
+    if (!employeeCode || !lastName || !firstName) {
       return NextResponse.json(
         { error: "必須項目が入力されていません" },
         { status: 400 }
@@ -145,15 +145,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate email
-    const existingEmail = await prisma.employee.findFirst({
-      where: { email },
-    });
-    if (existingEmail) {
-      return NextResponse.json(
-        { error: "このメールアドレスは既に使用されています" },
-        { status: 400 }
-      );
+    // Check for duplicate email only when a non-empty email is provided
+    if (email) {
+      const existingEmail = await prisma.employee.findFirst({
+        where: { email },
+      });
+      if (existingEmail) {
+        return NextResponse.json(
+          { error: "このメールアドレスは既に使用されています" },
+          { status: 400 }
+        );
+      }
     }
 
     const employee = await prisma.employee.create({
