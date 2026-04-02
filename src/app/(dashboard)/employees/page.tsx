@@ -16,6 +16,7 @@ import {
   Users,
   Download,
   Upload,
+  UserX,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -101,6 +102,9 @@ export default function EmployeesPage() {
   const [sortField, setSortField] = useState<SortField>("employeeCode");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [loading, setLoading] = useState(true);
+  const [retiredEmployees, setRetiredEmployees] = useState<Employee[]>([]);
+  const [retiredOpen, setRetiredOpen] = useState(false);
+  const [retiredLoading, setRetiredLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -115,6 +119,7 @@ export default function EmployeesPage() {
         sortOrder,
       });
 
+      params.set("isActive", "true");
       if (search) params.set("search", search);
       if (departmentFilter) params.set("departmentId", departmentFilter);
       if (selectedCompanyId) params.set("companyId", selectedCompanyId);
@@ -143,6 +148,29 @@ export default function EmployeesPage() {
       console.error("部署一覧取得エラー:", error);
     }
   }, []);
+
+  const fetchRetiredEmployees = useCallback(async () => {
+    setRetiredLoading(true);
+    try {
+      const params = new URLSearchParams({ isActive: "false", limit: "200" });
+      if (selectedCompanyId) params.set("companyId", selectedCompanyId);
+      const res = await fetch(`/api/employees?${params.toString()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setRetiredEmployees(data.employees);
+    } catch (error) {
+      console.error("退職者一覧取得エラー:", error);
+    } finally {
+      setRetiredLoading(false);
+    }
+  }, [selectedCompanyId]);
+
+  const handleToggleRetired = () => {
+    if (!retiredOpen && retiredEmployees.length === 0) {
+      fetchRetiredEmployees();
+    }
+    setRetiredOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     fetchDepartments();
@@ -487,6 +515,73 @@ export default function EmployeesPage() {
             </div>
           )}
         </CardContent>
+      </Card>
+
+      {/* 退職者セクション */}
+      <Card>
+        <CardHeader
+          className="cursor-pointer select-none"
+          onClick={handleToggleRetired}
+        >
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-muted-foreground">
+              <UserX className="h-5 w-5" />
+              退職者
+            </CardTitle>
+            <ChevronDown
+              className={`h-5 w-5 text-muted-foreground transition-transform ${retiredOpen ? "rotate-180" : ""}`}
+            />
+          </div>
+        </CardHeader>
+        {retiredOpen && (
+          <CardContent>
+            {retiredLoading ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">読み込み中...</p>
+            ) : retiredEmployees.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">退職者はいません</p>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>社員コード</TableHead>
+                      {can("name") !== "hidden" && <TableHead>氏名</TableHead>}
+                      {can("department") !== "hidden" && <TableHead>部署</TableHead>}
+                      {can("position") !== "hidden" && <TableHead>役職</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {retiredEmployees.map((emp) => (
+                      <TableRow
+                        key={emp.id}
+                        className="cursor-pointer hover:bg-muted/50 opacity-70"
+                        onClick={() => router.push(`/employees/${emp.id}`)}
+                      >
+                        <TableCell className="font-mono">{emp.employeeCode}</TableCell>
+                        {can("name") !== "hidden" && (
+                          <TableCell>
+                            <div className="font-medium">{emp.lastName} {emp.firstName}</div>
+                            {emp.lastNameKana && emp.firstNameKana && (
+                              <div className="text-sm text-muted-foreground">
+                                {emp.lastNameKana} {emp.firstNameKana}
+                              </div>
+                            )}
+                          </TableCell>
+                        )}
+                        {can("department") !== "hidden" && (
+                          <TableCell>{emp.department?.name || "-"}</TableCell>
+                        )}
+                        {can("position") !== "hidden" && (
+                          <TableCell>{emp.position?.name || "-"}</TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
     </div>
   );
