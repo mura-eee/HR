@@ -317,7 +317,12 @@ export default function EvaluationDetailPage() {
     }, 0) ?? 0;
 
   const totalScore = Math.round((competencySubtotal + kpiSubtotal) * 10) / 10;
-  const currentRank = getRankFromScore(totalScore);
+  // DBにExcelインポートしたランク・号棒があればそちらを優先、なければスコアから計算
+  const calcRank = getRankFromScore(totalScore);
+  const currentRank = {
+    rank: evaluation?.rank ?? calcRank.rank,
+    salaryStepChange: evaluation?.salaryStepChange ?? calcRank.salaryStepChange,
+  };
 
   // evaluationManage 権限: edit=編集・削除可, view=編集可（削除不可）, hidden=閲覧のみ
   const evalManage = can("evaluationManage");
