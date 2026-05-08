@@ -264,11 +264,23 @@ export async function POST(
       });
     });
 
-    // 全更新を実行
-    await Promise.all([...compUpdates, ...kpiCreates]);
+    // 全更新を実行（コンピテンシー・KPI・Evaluation本体のランク/号棒）
+    await Promise.all([
+      ...compUpdates,
+      ...kpiCreates,
+      prisma.evaluation.update({
+        where: { id: evaluationId },
+        data: {
+          rank: rank ?? undefined,
+          salaryStepChange: salaryStepChange ?? undefined,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       message: "インポートが完了しました",
+      rank,
+      salaryStepChange,
       competencyCount: compUpdates.length,
       kpiCount: kpiCreates.length,
     });
