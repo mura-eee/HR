@@ -84,6 +84,11 @@ interface CompetencyEvaluation {
   convertedScore: number | null;
   firstComment: string | null;
   secondComment: string | null;
+  // 個人別レベルテキスト（Excelインポート時に設定）
+  level1Text: string | null;
+  level2Text: string | null;
+  level3Text: string | null;
+  level4Text: string | null;
 }
 
 interface KpiGoal {
