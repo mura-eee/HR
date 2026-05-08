@@ -123,6 +123,7 @@ interface EvaluationData {
   totalScore: number | null;
   rank: string | null;
   salaryStepChange: number | null;
+  salaryStepBefore: number | null;
   employee: {
     id: string;
     employeeCode: string;
