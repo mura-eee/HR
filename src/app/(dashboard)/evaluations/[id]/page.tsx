@@ -499,6 +499,34 @@ export default function EvaluationDetailPage() {
     }
   };
 
+  // ---------- Excel Import ----------
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch(`/api/evaluations/${evaluationId}/import-excel`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`インポート完了：コンピテンシー ${data.competencyCount} 件、KPI ${data.kpiCount} 件`);
+        await fetchEvaluation();
+      } else {
+        alert(data.error || "インポートに失敗しました");
+      }
+    } catch {
+      alert("インポートに失敗しました");
+    } finally {
+      setImporting(false);
+      if (importFileRef.current) importFileRef.current.value = "";
+    }
+  };
+
   // ---------- Helpers ----------
 
   const formatDate = (dateStr: string) => {
