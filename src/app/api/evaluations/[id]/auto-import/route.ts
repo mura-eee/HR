@@ -6,8 +6,8 @@ import * as XLSX from "xlsx";
 import * as fs from "fs";
 import * as path from "path";
 
-// Excelファイルが格納されているベースフォルダ
-const EXCEL_BASE_DIR = "C:/Users/村井俊介/Desktop/トキト　評価シート";
+// Excelファイルが格納されているフォルダ（サブフォルダなし）
+const EXCEL_BASE_DIR = "C:/Users/村井俊介/Desktop/HR２/評価シート";
 
 // Excelの列インデックス定数
 const COL = {
@@ -38,7 +38,14 @@ const COL = {
   KPI_COMMENT2: 26,   // AA: 2次コメント
   KPI_SCORE1: 29,     // AD: 1次評価点数
   KPI_SCORE2: 30,     // AE: 2次評価点数
+
+  // 最終評価（行79 = index 78）
+  RESULT_RANK: 16,         // Q79: 評価ランク
+  RESULT_STEP_CHANGE: 17,  // R79: 号棒増減
 };
+
+// 最終評価が入っている行（0-indexed）
+const RESULT_ROW = 78; // 79行目
 
 function getCellValue(ws: XLSX.WorkSheet, row: number, col: number): string {
   const addr = XLSX.utils.encode_cell({ r: row, c: col });
@@ -55,30 +62,13 @@ function getCellNumber(ws: XLSX.WorkSheet, row: number, col: number): number | n
 }
 
 /**
- * 部署名からExcelフォルダを探す
- * DBの部署名とフォルダ名が一致しない場合に部分一致で探す
+ * 社員名からExcelファイルを探す（フラットフォルダ内）
  */
-function findDeptFolder(deptName: string): string | null {
+function findExcelFile(lastName: string, firstName: string): string | null {
   if (!fs.existsSync(EXCEL_BASE_DIR)) return null;
-  const entries = fs.readdirSync(EXCEL_BASE_DIR, { withFileTypes: true });
-  const dirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
-
-  // 完全一致
-  if (dirs.includes(deptName)) return path.join(EXCEL_BASE_DIR, deptName);
-
-  // 部分一致（DBの部署名がフォルダ名に含まれる、または逆）
-  const match = dirs.find(
-    (d) => d.includes(deptName) || deptName.includes(d)
+  const files = fs.readdirSync(EXCEL_BASE_DIR).filter(
+    (f) => f.endsWith(".xlsx") || f.endsWith(".xls")
   );
-  return match ? path.join(EXCEL_BASE_DIR, match) : null;
-}
-
-/**
- * 社員名からExcelファイルを探す
- */
-function findExcelFile(deptFolder: string, lastName: string, firstName: string): string | null {
-  if (!fs.existsSync(deptFolder)) return null;
-  const files = fs.readdirSync(deptFolder).filter((f) => f.endsWith(".xlsx") || f.endsWith(".xls"));
 
   const fullName = lastName + firstName;
 
@@ -88,12 +78,12 @@ function findExcelFile(deptFolder: string, lastName: string, firstName: string):
 
   // 複数ある場合は末尾の番号が最大のものを選ぶ
   matches.sort((a, b) => {
-    const numA = parseInt(a.match(/(\d+)\.[^.]+$/)?.[1] ?? "0");
-    const numB = parseInt(b.match(/(\d+)\.[^.]+$/)?.[1] ?? "0");
+    const numA = parseInt(a.match(/(\d+)[^0-9]*\.[^.]+$/)?.[1] ?? "0");
+    const numB = parseInt(b.match(/(\d+)[^0-9]*\.[^.]+$/)?.[1] ?? "0");
     return numB - numA;
   });
 
-  return path.join(deptFolder, matches[0]);
+  return path.join(EXCEL_BASE_DIR, matches[0]);
 }
 
 // POST /api/evaluations/[id]/auto-import
@@ -129,33 +119,13 @@ export async function POST(
     }
 
     const { lastName, firstName } = evaluation.employee;
-    const deptName = evaluation.employee.department?.name ?? "";
 
-    // 部署フォルダを探す
-    const deptFolder = deptName ? findDeptFolder(deptName) : null;
-
-    // 部署フォルダが見つからない場合はベースフォルダ全体を探す
-    let excelPath: string | null = null;
-    if (deptFolder) {
-      excelPath = findExcelFile(deptFolder, lastName, firstName);
-    }
-
-    // 部署フォルダで見つからない場合は全サブフォルダを探す
-    if (!excelPath && fs.existsSync(EXCEL_BASE_DIR)) {
-      const entries = fs.readdirSync(EXCEL_BASE_DIR, { withFileTypes: true });
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const folder = path.join(EXCEL_BASE_DIR, entry.name);
-        excelPath = findExcelFile(folder, lastName, firstName);
-        if (excelPath) break;
-      }
-    }
+    // Excelファイルを探す
+    const excelPath = findExcelFile(lastName, firstName);
 
     if (!excelPath) {
       return NextResponse.json(
-        {
-          error: `Excelファイルが見つかりません。対象者: ${lastName}${firstName}（部署: ${deptName || "不明"}）`,
-        },
+        { error: `Excelファイルが見つかりません。対象者: ${lastName}${firstName}` },
         { status: 404 }
       );
     }
@@ -164,6 +134,10 @@ export async function POST(
     const buffer = fs.readFileSync(excelPath);
     const wb = XLSX.read(buffer, { type: "buffer" });
     const ws = wb.Sheets[wb.SheetNames[0]];
+
+    // ======== 最終評価（ランク・号棒）の読み取り ========
+    const rank = getCellValue(ws, RESULT_ROW, COL.RESULT_RANK) || null;
+    const salaryStepChange = getCellNumber(ws, RESULT_ROW, COL.RESULT_STEP_CHANGE);
 
     // ======== コンピテンシー行の検出・インポート ========
     const COMP_START_ROW = 13;
@@ -324,12 +298,24 @@ export async function POST(
       });
     });
 
-    // 全更新を実行
-    await Promise.all([...compUpdates, ...kpiCreates]);
+    // コンピテンシー・KPI更新と同時に、Evaluation本体のランク・号棒も更新
+    await Promise.all([
+      ...compUpdates,
+      ...kpiCreates,
+      prisma.evaluation.update({
+        where: { id: evaluationId },
+        data: {
+          rank: rank ?? undefined,
+          salaryStepChange: salaryStepChange ?? undefined,
+        },
+      }),
+    ]);
 
     return NextResponse.json({
       message: "インポートが完了しました",
       filePath: excelPath,
+      rank,
+      salaryStepChange,
       competencyCount: compUpdates.length,
       kpiCount: kpiCreates.length,
     });
