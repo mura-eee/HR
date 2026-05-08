@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 // Excelファイルが格納されているベースフォルダ
-const EXCEL_BASE_DIR = "C:\\Users\\村井俊介\\Desktop\\トキト　評価シート";
+const EXCEL_BASE_DIR = "C:/Users/村井俊介/Desktop/トキト　評価シート";
 
 // Excelの列インデックス定数
 const COL = {
