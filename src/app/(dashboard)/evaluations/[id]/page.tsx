@@ -527,6 +527,26 @@ export default function EvaluationDetailPage() {
     }
   };
 
+  const handleAutoImport = async () => {
+    setImporting(true);
+    try {
+      const res = await fetch(`/api/evaluations/${evaluationId}/auto-import`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`自動取込完了：コンピテンシー ${data.competencyCount} 件、KPI ${data.kpiCount} 件`);
+        await fetchEvaluation();
+      } else {
+        alert(data.error || "取込に失敗しました");
+      }
+    } catch {
+      alert("取込に失敗しました");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   // ---------- Helpers ----------
 
   const formatDate = (dateStr: string) => {
