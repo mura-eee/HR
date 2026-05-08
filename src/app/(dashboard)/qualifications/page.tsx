@@ -275,14 +275,26 @@ function QualificationsContent() {
 
   // --- Employee Qualification CRUD ---
 
-  const openEmpQualDialog = () => {
-    setEmpQualForm({
-      employeeId: "",
-      qualificationId: "",
-      acquiredDate: "",
-      expiryDate: "",
-      certificateNumber: "",
-    });
+  const openEmpQualDialog = (eq?: EmployeeQualification) => {
+    if (eq) {
+      setEditingEmpQual(eq);
+      setEmpQualForm({
+        employeeId: eq.employeeId,
+        qualificationId: eq.qualificationId,
+        acquiredDate: eq.acquiredDate ? eq.acquiredDate.slice(0, 10) : "",
+        expiryDate: eq.expiryDate ? eq.expiryDate.slice(0, 10) : "",
+        certificateNumber: eq.certificateNumber || "",
+      });
+    } else {
+      setEditingEmpQual(null);
+      setEmpQualForm({
+        employeeId: "",
+        qualificationId: "",
+        acquiredDate: "",
+        expiryDate: "",
+        certificateNumber: "",
+      });
+    }
     setEmpQualDialogOpen(true);
   };
 
