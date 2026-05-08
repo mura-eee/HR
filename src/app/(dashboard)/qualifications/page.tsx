@@ -121,6 +121,7 @@ function QualificationsContent() {
   const [empQualifications, setEmpQualifications] = useState<EmployeeQualification[]>([]);
   const [loadingEmpQual, setLoadingEmpQual] = useState(true);
   const [empQualDialogOpen, setEmpQualDialogOpen] = useState(false);
+  const [editingEmpQual, setEditingEmpQual] = useState<EmployeeQualification | null>(null);
   const [empQualForm, setEmpQualForm] = useState({
     employeeId: "",
     qualificationId: "",
