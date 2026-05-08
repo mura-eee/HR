@@ -795,7 +795,7 @@ function QualificationsContent() {
       <Dialog open={empQualDialogOpen} onOpenChange={setEmpQualDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>資格を割り当て</DialogTitle>
+            <DialogTitle>{editingEmpQual ? "社員資格を編集" : "資格を割り当て"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
