@@ -227,9 +227,9 @@ async function processSheet(ws: XLSX.WorkSheet, filename: string): Promise<Impor
   const kpiScore   = kpiData.reduce((s, k) => s + (k.convertedScore ?? 0), 0);
   const totalScore = Math.round((compScore + kpiScore) * 10) / 10;
 
-  // Excelにランク・号棒があればそちら優先、なければ得点から算出
-  const rank           = excelRank           ?? null;
+  const rank             = excelRank             ?? null;
   const salaryStepChange = excelSalaryStepChange ?? null;
+  const salaryStepBefore = excelSalaryStepBefore ?? null;
 
   // ======== Evaluation upsert ========
   const evaluation = await prisma.evaluation.upsert({
