@@ -608,13 +608,22 @@ export default function EvaluationDetailPage() {
             onChange={handleImportExcel}
           />
           <Button
+            variant="default"
+            size="sm"
+            onClick={handleAutoImport}
+            disabled={importing}
+          >
+            <Upload className="w-4 h-4 mr-1" />
+            {importing ? "取込中..." : "Excelを自動取込"}
+          </Button>
+          <Button
             variant="outline"
             size="sm"
             onClick={() => importFileRef.current?.click()}
             disabled={importing}
           >
             <Upload className="w-4 h-4 mr-1" />
-            {importing ? "取込中..." : "Excelから取込"}
+            手動取込
           </Button>
           {canDelete && (
             <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
