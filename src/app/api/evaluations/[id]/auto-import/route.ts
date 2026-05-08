@@ -136,8 +136,9 @@ export async function POST(
     const ws = wb.Sheets[wb.SheetNames[0]];
 
     // ======== 最終評価（ランク・号棒）の読み取り ========
-    const rank = getCellValue(ws, RESULT_ROW, COL.RESULT_RANK) || null;
+    const rank             = getCellValue(ws, RESULT_ROW, COL.RESULT_RANK) || null;
     const salaryStepChange = getCellNumber(ws, RESULT_ROW, COL.RESULT_STEP_CHANGE);
+    const salaryStepBefore = getCellNumber(ws, RESULT_ROW, 19); // T79(0-indexed): 評価前号棒
 
     // ======== コンピテンシー行の検出・インポート ========
     const COMP_START_ROW = 13;
