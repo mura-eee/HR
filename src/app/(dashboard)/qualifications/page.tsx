@@ -535,7 +535,7 @@ function QualificationsContent() {
                     Excel出力
                   </Button>
                 )}
-                <Button onClick={openEmpQualDialog} size="sm">
+                <Button onClick={() => openEmpQualDialog()} size="sm">
                   <Plus className="w-4 h-4 mr-1" />
                   資格割当
                 </Button>
