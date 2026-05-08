@@ -308,6 +308,7 @@ export async function POST(
         data: {
           rank: rank ?? undefined,
           salaryStepChange: salaryStepChange ?? undefined,
+          salaryStepBefore: salaryStepBefore ?? undefined,
         },
       }),
     ]);
