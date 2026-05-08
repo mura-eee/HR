@@ -373,7 +373,7 @@ export async function POST(request: NextRequest) {
       // ── ローカルファイルシステムモード（開発環境）──
       const { existsSync, readdirSync, readFileSync } = await import("fs");
       const { join } = await import("path");
-      const EVAL_DIR = "C:/Users/村井俊介/Desktop/HR２/評価シート";
+      const EVAL_DIR = "C:/Users/村井俊介/OneDrive - 株式会社トキト/村井/03_生成AI/00_参照フォルダ/HR２/評価シート";
 
       if (!existsSync(EVAL_DIR)) {
         return NextResponse.json(
