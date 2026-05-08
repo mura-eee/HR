@@ -33,7 +33,14 @@ const COL = {
   KPI_COMMENT2: 26,   // AA: 2次コメント
   KPI_SCORE1: 29,     // AD: 1次評価点数
   KPI_SCORE2: 30,     // AE: 2次評価点数
+
+  // 最終評価（行79 = index 78）
+  RESULT_RANK: 16,        // Q79: 評価ランク
+  RESULT_STEP_CHANGE: 17, // R79: 号棒増減
 };
+
+// 最終評価が入っている行（0-indexed）
+const RESULT_ROW = 78;
 
 function getCellValue(ws: XLSX.WorkSheet, row: number, col: number): string {
   const addr = XLSX.utils.encode_cell({ r: row, c: col });
