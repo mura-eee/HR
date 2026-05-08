@@ -186,6 +186,7 @@ model Evaluation {
   totalScore        Float?
   rank              String?
   salaryStepChange  Int?
+  salaryStepBefore  Int?   // 評価前号棒（Excelから取得）
 
   competencyEvaluations CompetencyEvaluation[]
   kpiGoals              KpiGoal[]
