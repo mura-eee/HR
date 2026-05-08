@@ -49,6 +49,7 @@ import {
   Calendar,
   Building2,
   Briefcase,
+  Upload,
 } from "lucide-react";
 import {
   getRankFromScore,
