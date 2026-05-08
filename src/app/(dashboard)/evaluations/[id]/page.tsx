@@ -1393,12 +1393,17 @@ export default function EvaluationDetailPage() {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">現在の号俸</span>
-                        <span className="font-medium">{evaluation.employee.salaryStep != null ? `${evaluation.employee.salaryStep}号` : "-"}</span>
+                        <span className="font-medium">
+                          {/* 評価前号棒: Excelインポート値優先、なければ社員マスター値 */}
+                          {(evaluation.salaryStepBefore ?? evaluation.employee.salaryStep) != null
+                            ? `${evaluation.salaryStepBefore ?? evaluation.employee.salaryStep}号`
+                            : "-"}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">評価後の号俸</span>
                         <span className="font-bold">
-                          {Math.max(1, evaluation.employee.salaryStep + currentRank.salaryStepChange)}号
+                          {Math.max(1, (evaluation.salaryStepBefore ?? evaluation.employee.salaryStep) + currentRank.salaryStepChange)}号
                         </span>
                       </div>
                     </div>
