@@ -203,6 +203,8 @@ export default function EvaluationDetailPage() {
   const [addKpiDialogOpen, setAddKpiDialogOpen] = useState(false);
   const [newKpiTitle, setNewKpiTitle] = useState("");
   const [deleteKpiId, setDeleteKpiId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   // Local state for real-time calculation
   const [competencyScores, setCompetencyScores] = useState<
