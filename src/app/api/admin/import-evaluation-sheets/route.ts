@@ -133,9 +133,10 @@ async function processSheet(ws: XLSX.WorkSheet, filename: string): Promise<Impor
   const firstEvaluator  = await findEvaluator(cellStr(ws, 5, 3));
   const secondEvaluator = await findEvaluator(cellStr(ws, 6, 3));
 
-  // ======== 最終評価ランク・号棒（Q79, R79）========
-  const excelRank           = cellStr(ws, RESULT_ROW, 17) || null; // Q79
-  const excelSalaryStepChange = cellNum(ws, RESULT_ROW, 18);       // R79
+  // ======== 最終評価ランク・号棒（Q79, R79, T79）========
+  const excelRank             = cellStr(ws, RESULT_ROW, 17) || null; // Q79: 評価ランク
+  const excelSalaryStepChange = cellNum(ws, RESULT_ROW, 18);         // R79: 号棒増減
+  const excelSalaryStepBefore = cellNum(ws, RESULT_ROW, 20);         // T79: 評価前号棒
 
   // ======== コンピテンシーデータ読み取り ========
   // 列（1始まり）:
