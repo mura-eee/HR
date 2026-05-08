@@ -750,7 +750,9 @@ export default function EvaluationDetailPage() {
                           {/* Level columns with highlighting */}
                           {[1, 2, 3, 4].map((level) => {
                             const levelKey = `level${level}Text` as keyof CompetencyItem;
-                            const text = ce.competencyItem[levelKey] as string | null;
+                            // 個人別テキスト優先（Excelインポート値）、なければマスターを使用
+                            const ceKey = `level${level}Text` as keyof CompetencyEvaluation;
+                            const text = (ce[ceKey] as string | null) ?? (ce.competencyItem[levelKey] as string | null);
                             const isFirst = firstScoreVal === level;
                             const isSecond = secondScoreVal === level;
                             return (
