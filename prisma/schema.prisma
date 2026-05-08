@@ -228,6 +228,11 @@ model CompetencyEvaluation {
   convertedScore   Float?
   firstComment     String?
   secondComment    String?
+  // 個人別レベルテキスト（Excelから取得、未設定時はCompetencyItemのテキストを使用）
+  level1Text       String?
+  level2Text       String?
+  level3Text       String?
+  level4Text       String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
