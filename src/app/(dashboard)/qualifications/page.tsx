@@ -894,7 +894,7 @@ function QualificationsContent() {
                 !empQualForm.employeeId || !empQualForm.qualificationId
               }
             >
-              割り当て
+              {editingEmpQual ? "更新" : "割り当て"}
             </Button>
           </DialogFooter>
         </DialogContent>
