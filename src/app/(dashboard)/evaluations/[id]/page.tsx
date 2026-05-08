@@ -580,6 +580,22 @@ export default function EvaluationDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <input
+            ref={importFileRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleImportExcel}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => importFileRef.current?.click()}
+            disabled={importing}
+          >
+            <Upload className="w-4 h-4 mr-1" />
+            {importing ? "取込中..." : "Excelから取込"}
+          </Button>
           {canDelete && (
             <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="w-4 h-4 mr-1" />
