@@ -243,6 +243,7 @@ async function processSheet(ws: XLSX.WorkSheet, filename: string): Promise<Impor
       totalScore,
       rank,
       salaryStepChange,
+      salaryStepBefore,
     },
     create: {
       employeeId:        employee.id,
@@ -255,6 +256,7 @@ async function processSheet(ws: XLSX.WorkSheet, filename: string): Promise<Impor
       totalScore,
       rank,
       salaryStepChange,
+      salaryStepBefore,
     },
   });
 
