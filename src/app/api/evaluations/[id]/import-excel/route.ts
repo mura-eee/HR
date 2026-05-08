@@ -97,6 +97,10 @@ export async function POST(
     const wb = XLSX.read(buffer, { type: "buffer" });
     const ws = wb.Sheets[wb.SheetNames[0]];
 
+    // ======== 最終評価（ランク・号棒）の読み取り ========
+    const rank = getCellValue(ws, RESULT_ROW, COL.RESULT_RANK) || null;
+    const salaryStepChange = getCellNumber(ws, RESULT_ROW, COL.RESULT_STEP_CHANGE);
+
     // ======== コンピテンシー行の検出・インポート ========
     // カテゴリ列(A)に値があり、係数列(J)に数値がある行をコンピテンシー行とみなす
     // 期待される開始行: 14行目(0-indexed: 13)
