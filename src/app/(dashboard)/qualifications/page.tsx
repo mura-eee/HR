@@ -300,8 +300,12 @@ function QualificationsContent() {
 
   const handleSaveEmpQual = async () => {
     try {
-      const res = await fetch("/api/employee-qualifications", {
-        method: "POST",
+      const url = editingEmpQual
+        ? `/api/employee-qualifications/${editingEmpQual.id}`
+        : "/api/employee-qualifications";
+      const method = editingEmpQual ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(empQualForm),
       });
