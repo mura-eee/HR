@@ -20,6 +20,7 @@ import {
   Loader2,
   Shield,
   Heart,
+  History,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,14 @@ interface EmployeeQualification {
   acquiredDate: string | null;
   expiryDate: string | null;
   qualification: Qualification;
+}
+
+interface NameHistory {
+  id: string;
+  lastName: string;
+  firstName: string;
+  changedAt: string;
+  reason: string | null;
 }
 
 interface Evaluation {
@@ -127,6 +136,7 @@ interface Employee {
   jobType: { id: string; name: string } | null;
   qualifications: EmployeeQualification[];
   evaluations: Evaluation[];
+  nameHistories: NameHistory[];
 }
 
 function formatDate(dateStr: string | null): string {
@@ -324,6 +334,23 @@ export default function EmployeeDetailPage() {
                         </p>
                       </div>
                     )}
+                  </div>
+                )}
+                {can("name") !== "hidden" && employee.nameHistories && employee.nameHistories.length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                      <History className="h-3 w-3" />氏名変更履歴
+                    </p>
+                    <div className="mt-1 space-y-1">
+                      {employee.nameHistories.map((h) => (
+                        <div key={h.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="font-medium text-foreground">{h.lastName} {h.firstName}</span>
+                          <span>→</span>
+                          <span>{formatDate(h.changedAt)}</span>
+                          {h.reason && <span className="text-xs bg-muted px-1.5 py-0.5 rounded">{h.reason}</span>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {(can("gender") !== "hidden" || can("birthDate") !== "hidden") && (

@@ -34,6 +34,10 @@ export async function GET(
             period: { select: { name: true } },
           },
         },
+        nameHistories: {
+          orderBy: { changedAt: "desc" },
+          select: { id: true, lastName: true, firstName: true, changedAt: true, reason: true },
+        },
       },
     });
 

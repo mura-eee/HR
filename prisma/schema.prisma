@@ -102,6 +102,18 @@ model Employee {
   evaluations             Evaluation[]           @relation("EvaluatedEmployee")
   firstEvaluations        Evaluation[]           @relation("FirstEvaluator")
   secondEvaluations       Evaluation[]           @relation("SecondEvaluator")
+  nameHistories           EmployeeNameHistory[]
+}
+
+model EmployeeNameHistory {
+  id          String   @id @default(cuid())
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  lastName    String
+  firstName   String
+  changedAt   DateTime @default(now())
+  reason      String?
+  createdAt   DateTime @default(now())
 }
 
 model Department {
