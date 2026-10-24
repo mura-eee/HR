@@ -187,7 +187,7 @@ function TreeNode({
           )}
           {node.children.map((child, index) => (
             <TreeNode
-              key={child.id}
+              key={`${child.id}-${index}`}
               node={child}
               expandedIds={expandedIds}
               onToggle={onToggle}
@@ -263,7 +263,7 @@ function TreeView({ departments }: { departments: DepartmentNode[] }) {
       <div className="space-y-1">
         {departments.map((dept, index) => (
           <TreeNode
-            key={dept.id}
+            key={`${dept.id}-${index}`}
             node={dept}
             expandedIds={expandedIds}
             onToggle={onToggle}
@@ -282,6 +282,7 @@ function TreeView({ departments }: { departments: DepartmentNode[] }) {
 
 const BOX_W = 150;
 const BOX_H = 58;
+const PARENT_BOX_H = 72;
 const EMP_ROW_H = 18;
 const H_GAP = 18;
 const V_GAP = 56;
@@ -308,7 +309,9 @@ function buildLayout(node: DepartmentNode, cx: number, y: number): LayoutNode {
   const sw = subtreeWidth(node);
   // Show employees only in leaf nodes (no children)
   const showEmps = node.children.length === 0;
-  const bh = BOX_H + (showEmps ? node.employees.length * EMP_ROW_H : 0);
+  const bh = showEmps
+    ? BOX_H + node.employees.length * EMP_ROW_H
+    : PARENT_BOX_H;
   const result: LayoutNode = { node, cx, y, subtreeW: sw, boxH: bh, children: [] };
 
   if (node.children.length > 0) {
@@ -339,6 +342,18 @@ function collectAll(ln: LayoutNode, nodes: LayoutNode[], edges: { x1: number; y1
     edges.push({ x1: child.cx, y1: mid, x2: child.cx, y2: cy });
     collectAll(child, nodes, edges);
   }
+}
+
+function findTopPerson(node: DepartmentNode): Employee | null {
+  let best: Employee | null = null;
+  for (const emp of node.employees) {
+    if (!best || (emp.position?.level ?? 0) > (best.position?.level ?? 0)) best = emp;
+  }
+  for (const child of node.children) {
+    const cb = findTopPerson(child);
+    if (cb && (!best || (cb.position?.level ?? 0) > (best.position?.level ?? 0))) best = cb;
+  }
+  return best;
 }
 
 function boxFill(depth: number): string {
@@ -374,10 +389,10 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
   const svgW = offsetX - H_GAP * 2 + BOX_W / 2 + 10;
   const svgH = Math.max(...allNodes.map((n) => n.y + n.boxH)) + 20;
 
-  // depth lookup
-  const depthMap = new Map<string, number>();
+  // depth lookup (keyed by LayoutNode object to handle shared dept IDs across companies)
+  const depthMap = new Map<LayoutNode, number>();
   function markDepth(ln: LayoutNode, d: number) {
-    depthMap.set(ln.node.id, d);
+    depthMap.set(ln, d);
     for (const c of ln.children) markDepth(c, d + 1);
   }
   for (const rl of rootLayouts) markDepth(rl, 0);
@@ -385,6 +400,15 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
   // total count including descendants
   function totalEmpCount(ln: LayoutNode): number {
     return ln.node.employees.length + ln.children.reduce((s, c) => s + totalEmpCount(c), 0);
+  }
+
+  // Pre-compute top person (highest position.level) for each non-leaf node
+  const topPersonMap = new Map<LayoutNode, Employee>();
+  for (const ln of allNodes) {
+    if (ln.node.children.length > 0) {
+      const tp = findTopPerson(ln.node);
+      if (tp) topPersonMap.set(ln, tp);
+    }
   }
 
   return (
@@ -405,15 +429,15 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
         ))}
 
         {/* Boxes */}
-        {allNodes.map((ln) => {
-          const d = depthMap.get(ln.node.id) ?? 0;
+        {allNodes.map((ln, ni) => {
+          const d = depthMap.get(ln) ?? 0;
           const fill = boxFill(d);
           const bx = ln.cx - BOX_W / 2;
           const showEmps = ln.node.children.length === 0;
 
           return (
             <g
-              key={ln.node.id}
+              key={`node-${ni}`}
               onClick={() => setSelected(selected?.id === ln.node.id ? null : ln.node)}
               style={{ cursor: "pointer" }}
             >
@@ -444,16 +468,28 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
               >
                 {totalEmpCount(ln)}名
               </text>
-              {/* Employees in leaf nodes */}
-              {showEmps && ln.node.employees.map((emp, ei) => (
+              {/* Top person for non-leaf nodes */}
+              {!showEmps && (() => {
+                const tp = topPersonMap.get(ln);
+                if (!tp) return null;
+                const posLabel = tp.position?.name ? tp.position.name + " " : "";
+                return (
+                  <text x={ln.cx} y={ln.y + 50} textAnchor="middle" fontSize={9} fill="#475569" fontWeight="500">
+                    {posLabel + tp.lastName + " " + tp.firstName}
+                  </text>
+                );
+              })()}
+              {/* Employees in leaf nodes (sorted by position level) */}
+              {showEmps && [...ln.node.employees]
+                .sort((a, b) => (b.position?.level ?? 0) - (a.position?.level ?? 0))
+                .map((emp, ei) => (
                 <text
-                  key={emp.id}
+                  key={`${ni}-${emp.id}`}
                   x={bx + 8} y={ln.y + BOX_H + ei * EMP_ROW_H + 13}
                   fontSize={9}
                   fill="#334155"
                 >
-                  {emp.lastName} {emp.firstName}
-                  {emp.position ? `（${emp.position.name}）` : ""}
+                  {emp.lastName + " " + emp.firstName + (emp.position ? "（" + emp.position.name + "）" : "")}
                 </text>
               ))}
             </g>
@@ -522,8 +558,8 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {flatDepartments.map((dept) => (
-        <Card key={dept.id}>
+      {flatDepartments.map((dept, di) => (
+        <Card key={`card-${di}`}>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">{dept.name}</CardTitle>
@@ -576,6 +612,28 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
 // Grouped Visual Org Chart (全体表示: 会社ごとに分けたビジュアル)
 // ---------------------------------------------------------------------------
 
+function buildUnifiedTree(companyGroups: CompanyGroup[]): DepartmentNode {
+  return {
+    id: "root",
+    name: "トキトグループ",
+    code: "ROOT",
+    parentDepartmentId: null,
+    sortOrder: 0,
+    employeeCount: companyGroups.reduce((s, cg) => s + cg.totalCount, 0),
+    employees: [],
+    children: companyGroups.map((company) => ({
+      id: "company-" + company.id,
+      name: company.name,
+      code: "COMPANY",
+      parentDepartmentId: "root",
+      sortOrder: company.sortOrder,
+      employeeCount: company.totalCount,
+      employees: [],
+      children: company.departments as DepartmentNode[],
+    })),
+  };
+}
+
 function GroupedVisualOrgChart({ companyGroups }: { companyGroups: CompanyGroup[] }) {
   if (companyGroups.length === 0) {
     return (
@@ -584,23 +642,13 @@ function GroupedVisualOrgChart({ companyGroups }: { companyGroups: CompanyGroup[
       </div>
     );
   }
+  const root = buildUnifiedTree(companyGroups);
   return (
-    <div className="space-y-8">
-      {companyGroups.map((company) => (
-        <div key={company.id}>
-          <div className="flex items-center gap-2 mb-3 pb-2 border-b">
-            <Building2 className="w-5 h-5 text-blue-600" />
-            <h2 className="text-base font-bold">{company.name}</h2>
-            <span className="text-sm text-muted-foreground">{company.totalCount}名</span>
-          </div>
-          <Card>
-            <CardContent className="pt-6">
-              <VisualOrgChart departments={company.departments as DepartmentNode[]} />
-            </CardContent>
-          </Card>
-        </div>
-      ))}
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <VisualOrgChart departments={[root]} />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -712,7 +760,7 @@ function GroupCardView({ companyGroups }: { companyGroups: CompanyGroup[] }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {company.departments.map((dept) => (
-              <DeptCard key={dept.id} dept={dept} />
+              <DeptCard key={`${company.id}-${dept.id}`} dept={dept} />
             ))}
           </div>
         </div>
@@ -744,7 +792,7 @@ export default function OrganizationPage() {
         }
 
         if (!selectedCompanyId) {
-          const groupRes = await fetch("/api/organizations/group");
+          const groupRes = await fetch("/api/organizations/group", { cache: "no-store" });
           if (groupRes.ok) {
             const groupData = await groupRes.json();
             setCompanyGroups(groupData.companies);
