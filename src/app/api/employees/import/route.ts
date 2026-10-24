@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
   ]);
 
   const deptByCode = Object.fromEntries(departments.map((d) => [d.code, d]));
+  const deptByName = Object.fromEntries(departments.map((d) => [d.name, d]));
   const positionByName = Object.fromEntries(positions.map((p) => [p.name, p]));
   const companyByName = Object.fromEntries(companies.map((c) => [c.name, c]));
   const jobTypeByName = Object.fromEntries(jobTypes.map((j) => [j.name, j]));
@@ -74,7 +75,13 @@ export async function POST(request: NextRequest) {
     }
 
     const deptCode = String(row["部署コード"] ?? "").trim();
-    const dept = deptByCode[deptCode] || null;
+    const deptName = String(row["部署名"] ?? "").trim();
+    const hanName = String(row["班・グループ"] ?? "").trim();
+    let dept = deptByCode[deptCode] || deptByName[deptName] || null;
+    if (hanName) {
+      const childDept = deptByName[hanName] ?? null;
+      if (childDept) dept = childDept;
+    }
 
     const positionName = String(row["役職名"] ?? "").trim();
     const position = positionByName[positionName] || null;
@@ -153,10 +160,23 @@ export async function POST(request: NextRequest) {
       emergencyContactAddress: String(row["緊急連絡先住所"] ?? "").trim() || null,
     };
 
+    const nameChangeReason = String(row["氏名変更理由"] ?? "").trim() || null;
+
     try {
       const existing = await prisma.employee.findUnique({ where: { employeeCode } });
       if (existing) {
+        const nameChanged = existing.lastName !== lastName || existing.firstName !== firstName;
         await prisma.employee.update({ where: { employeeCode }, data });
+        if (nameChanged) {
+          await prisma.employeeNameHistory.create({
+            data: {
+              employeeId: existing.id,
+              lastName: existing.lastName,
+              firstName: existing.firstName,
+              reason: nameChangeReason,
+            },
+          });
+        }
         results.updated++;
       } else {
         await prisma.employee.create({ data: { ...data, employeeCode } });

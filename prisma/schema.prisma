@@ -103,6 +103,11 @@ model Employee {
   firstEvaluations        Evaluation[]           @relation("FirstEvaluator")
   secondEvaluations       Evaluation[]           @relation("SecondEvaluator")
   nameHistories           EmployeeNameHistory[]
+
+  @@index([isActive])
+  @@index([companyId, isActive])
+  @@index([departmentId, isActive])
+  @@index([lastName, firstName])
 }
 
 model EmployeeNameHistory {

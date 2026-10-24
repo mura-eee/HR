@@ -23,7 +23,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ departments });
+    return NextResponse.json({ departments }, {
+      headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=300" },
+    });
   } catch (error) {
     console.error("部署一覧取得エラー:", error);
     return NextResponse.json(

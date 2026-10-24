@@ -20,6 +20,7 @@ interface Department {
   id: string;
   name: string;
   code: string;
+  parentDepartmentId: string | null;
 }
 
 interface Position {
@@ -269,24 +270,56 @@ export default function NewEmployeePage() {
               <CardTitle>所属・給与情報</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="departmentId">部署</Label>
-                <Select
-                  value={form.departmentId}
-                  onValueChange={(value) => handleChange("departmentId", value)}
-                >
-                  <SelectTrigger id="departmentId">
-                    <SelectValue placeholder="選択してください" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {(() => {
+                const parentDepts = departments.filter(d => d.parentDepartmentId === null);
+                const selectedDept = departments.find(d => d.id === form.departmentId);
+                const isChildDept = selectedDept?.parentDepartmentId != null;
+                const effectiveParentId = isChildDept ? selectedDept!.parentDepartmentId! : form.departmentId;
+                const childDepts = departments.filter(d => d.parentDepartmentId === effectiveParentId);
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="departmentId">部署</Label>
+                      <Select
+                        value={effectiveParentId || ""}
+                        onValueChange={(value) => handleChange("departmentId", value)}
+                      >
+                        <SelectTrigger id="departmentId">
+                          <SelectValue placeholder="選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {parentDepts.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {dept.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {childDepts.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="subDepartmentId">班・グループ</Label>
+                        <Select
+                          value={isChildDept ? form.departmentId : "__none__"}
+                          onValueChange={(value) => handleChange("departmentId", value === "__none__" ? effectiveParentId : value)}
+                        >
+                          <SelectTrigger id="subDepartmentId">
+                            <SelectValue placeholder="（なし）" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">（なし）</SelectItem>
+                            {childDepts.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.id}>
+                                {dept.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               <div className="space-y-2">
                 <Label htmlFor="positionId">役職</Label>
                 <Select

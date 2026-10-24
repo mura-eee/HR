@@ -17,6 +17,7 @@ import {
   Users,
   ChevronDown,
   ChevronRight,
+  GitFork,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -267,6 +268,220 @@ function TreeView({ departments }: { departments: DepartmentNode[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Visual Org Chart
+// ---------------------------------------------------------------------------
+
+const BOX_W = 150;
+const BOX_H = 58;
+const EMP_ROW_H = 18;
+const H_GAP = 18;
+const V_GAP = 56;
+
+interface LayoutNode {
+  node: DepartmentNode;
+  cx: number; // center x
+  y: number;  // top y
+  subtreeW: number;
+  boxH: number;
+  children: LayoutNode[];
+}
+
+function subtreeWidth(node: DepartmentNode): number {
+  if (node.children.length === 0) return BOX_W;
+  const childrenW = node.children.reduce(
+    (sum, c, i) => sum + subtreeWidth(c) + (i > 0 ? H_GAP : 0),
+    0
+  );
+  return Math.max(BOX_W, childrenW);
+}
+
+function buildLayout(node: DepartmentNode, cx: number, y: number): LayoutNode {
+  const sw = subtreeWidth(node);
+  // Show employees only in leaf nodes (no children)
+  const showEmps = node.children.length === 0;
+  const bh = BOX_H + (showEmps ? node.employees.length * EMP_ROW_H : 0);
+  const result: LayoutNode = { node, cx, y, subtreeW: sw, boxH: bh, children: [] };
+
+  if (node.children.length > 0) {
+    const childrenTotalW = node.children.reduce(
+      (sum, c, i) => sum + subtreeWidth(c) + (i > 0 ? H_GAP : 0),
+      0
+    );
+    let childLeft = cx - childrenTotalW / 2;
+    for (const child of node.children) {
+      const cw = subtreeWidth(child);
+      result.children.push(buildLayout(child, childLeft + cw / 2, y + bh + V_GAP));
+      childLeft += cw + H_GAP;
+    }
+  }
+  return result;
+}
+
+function collectAll(ln: LayoutNode, nodes: LayoutNode[], edges: { x1: number; y1: number; x2: number; y2: number }[]) {
+  nodes.push(ln);
+  for (const child of ln.children) {
+    const px = ln.cx;
+    const py = ln.y + ln.boxH;
+    const cy = child.y;
+    const mid = py + (cy - py) / 2;
+    // Elbow connector: down → horizontal → down
+    edges.push({ x1: px, y1: py, x2: px, y2: mid });
+    edges.push({ x1: px, y1: mid, x2: child.cx, y2: mid });
+    edges.push({ x1: child.cx, y1: mid, x2: child.cx, y2: cy });
+    collectAll(child, nodes, edges);
+  }
+}
+
+function boxFill(depth: number): string {
+  if (depth === 0) return "#BDD7EE"; // light blue – root
+  if (depth === 1) return "#9DC3E6"; // medium blue – dept
+  return "#FFFFFF";                   // white – teams
+}
+
+function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
+  const [selected, setSelected] = useState<DepartmentNode | null>(null);
+
+  if (departments.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        部署データがありません
+      </div>
+    );
+  }
+
+  // Build layout for all root departments side by side
+  const rootLayouts: LayoutNode[] = [];
+  let offsetX = BOX_W / 2;
+  for (const dept of departments) {
+    const sw = subtreeWidth(dept);
+    rootLayouts.push(buildLayout(dept, offsetX + sw / 2, 0));
+    offsetX += sw + H_GAP * 2;
+  }
+
+  const allNodes: LayoutNode[] = [];
+  const allEdges: { x1: number; y1: number; x2: number; y2: number }[] = [];
+  for (const rl of rootLayouts) collectAll(rl, allNodes, allEdges);
+
+  const svgW = offsetX - H_GAP * 2 + BOX_W / 2 + 10;
+  const svgH = Math.max(...allNodes.map((n) => n.y + n.boxH)) + 20;
+
+  // depth lookup
+  const depthMap = new Map<string, number>();
+  function markDepth(ln: LayoutNode, d: number) {
+    depthMap.set(ln.node.id, d);
+    for (const c of ln.children) markDepth(c, d + 1);
+  }
+  for (const rl of rootLayouts) markDepth(rl, 0);
+
+  return (
+    <div className="overflow-auto">
+      <svg
+        width={svgW}
+        height={svgH}
+        style={{ minWidth: svgW, display: "block" }}
+      >
+        {/* Connectors */}
+        {allEdges.map((e, i) => (
+          <line
+            key={i}
+            x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2}
+            stroke="#94a3b8"
+            strokeWidth={1.5}
+          />
+        ))}
+
+        {/* Boxes */}
+        {allNodes.map((ln) => {
+          const d = depthMap.get(ln.node.id) ?? 0;
+          const fill = boxFill(d);
+          const bx = ln.cx - BOX_W / 2;
+          const showEmps = ln.node.children.length === 0;
+
+          return (
+            <g
+              key={ln.node.id}
+              onClick={() => setSelected(selected?.id === ln.node.id ? null : ln.node)}
+              style={{ cursor: "pointer" }}
+            >
+              <rect
+                x={bx} y={ln.y}
+                width={BOX_W} height={ln.boxH}
+                rx={8} ry={8}
+                fill={fill}
+                stroke={selected?.id === ln.node.id ? "#3b82f6" : "#94a3b8"}
+                strokeWidth={selected?.id === ln.node.id ? 2 : 1}
+              />
+              {/* Department name */}
+              <text
+                x={ln.cx} y={ln.y + 18}
+                textAnchor="middle"
+                fontSize={11}
+                fontWeight={d <= 1 ? "600" : "normal"}
+                fill="#1e293b"
+              >
+                {ln.node.name}
+              </text>
+              {/* Employee count */}
+              <text
+                x={ln.cx} y={ln.y + 34}
+                textAnchor="middle"
+                fontSize={10}
+                fill="#64748b"
+              >
+                {ln.node.employeeCount}名
+              </text>
+              {/* Employees in leaf nodes */}
+              {showEmps && ln.node.employees.map((emp, ei) => (
+                <text
+                  key={emp.id}
+                  x={bx + 8} y={ln.y + BOX_H + ei * EMP_ROW_H + 13}
+                  fontSize={9}
+                  fill="#334155"
+                >
+                  {emp.lastName} {emp.firstName}
+                  {emp.position ? `（${emp.position.name}）` : ""}
+                </text>
+              ))}
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Selected department detail panel */}
+      {selected && (
+        <div className="mt-4 border rounded-lg bg-white p-4 max-w-lg">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-semibold text-base">{selected.name}</h3>
+            <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          </div>
+          {selected.employees.length > 0 ? (
+            <div className="space-y-2">
+              {selected.employees.map((emp) => (
+                <Link
+                  key={emp.id}
+                  href={`/employees/${emp.id}`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-blue-50 hover:border-blue-300 transition-all"
+                >
+                  <Avatar className="w-7 h-7">
+                    <AvatarFallback className="text-xs">{emp.lastName.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{emp.lastName} {emp.firstName}</p>
+                    {emp.position && <p className="text-xs text-muted-foreground">{emp.position.name}</p>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">直属の社員はいません（子部署を展開してください）</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Card View Component
 // ---------------------------------------------------------------------------
 
@@ -398,8 +613,12 @@ export default function OrganizationPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="tree">
+      <Tabs defaultValue="visual">
         <TabsList>
+          <TabsTrigger value="visual" className="gap-1.5">
+            <GitFork className="w-4 h-4" />
+            ビジュアル
+          </TabsTrigger>
           <TabsTrigger value="tree" className="gap-1.5">
             <Network className="w-4 h-4" />
             ツリー表示
@@ -409,6 +628,14 @@ export default function OrganizationPage() {
             カード表示
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="visual" className="mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <VisualOrgChart departments={departments} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="tree" className="mt-4">
           <Card>

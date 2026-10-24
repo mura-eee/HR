@@ -3,23 +3,43 @@
 import { useState, useEffect } from "react";
 import { PermissionLevel, ALL_FIELDS } from "@/lib/field-permissions";
 
+// ページ遷移をまたいで再利用するメモリキャッシュ（60秒TTL）
+const _cache: Record<string, { perms: Record<string, PermissionLevel>; ts: number }> = {};
+const CACHE_TTL = 60_000;
+
+function getCached(key: string) {
+  const entry = _cache[key];
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.perms;
+  return null;
+}
+
 export function useFieldPermissions(companyId?: string | null, departmentId?: string | null) {
-  // ロード中はすべて "hidden" にしてフラッシュを防止
+  const cacheKey = `${companyId ?? ""}:${departmentId ?? ""}`;
+  const cached = getCached(cacheKey);
+
   const [permissions, setPermissions] = useState<Record<string, PermissionLevel>>(() => {
+    if (cached) return cached;
     const init: Record<string, PermissionLevel> = {};
     for (const f of ALL_FIELDS) init[f.key] = "hidden";
     return init;
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!cached);
 
   useEffect(() => {
+    const hit = getCached(cacheKey);
+    if (hit) {
+      setPermissions(hit);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    // パラメータ変更時も即座に hidden に戻す
     setPermissions(() => {
       const init: Record<string, PermissionLevel> = {};
       for (const f of ALL_FIELDS) init[f.key] = "hidden";
       return init;
     });
+
     const fetch_ = async () => {
       try {
         const params = new URLSearchParams();
@@ -30,6 +50,7 @@ export function useFieldPermissions(companyId?: string | null, departmentId?: st
         const res = await fetch(url);
         if (res.ok) {
           const { permissions: perms } = await res.json();
+          _cache[cacheKey] = { perms, ts: Date.now() };
           setPermissions(perms);
         }
       } finally {
@@ -37,9 +58,8 @@ export function useFieldPermissions(companyId?: string | null, departmentId?: st
       }
     };
     fetch_();
-  }, [companyId, departmentId]);
+  }, [cacheKey, companyId, departmentId]);
 
-  // フィールドの権限レベルを返す（ロード中は "hidden"、完了後はAPIの値か "edit"）
   const can = (fieldKey: string): PermissionLevel =>
     permissions[fieldKey] ?? (loading ? "hidden" : "edit");
 

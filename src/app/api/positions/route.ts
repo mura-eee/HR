@@ -20,7 +20,9 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ positions });
+    return NextResponse.json({ positions }, {
+      headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=300" },
+    });
   } catch (error) {
     console.error("役職一覧取得エラー:", error);
     return NextResponse.json(

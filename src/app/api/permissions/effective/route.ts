@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
   if (user.role === "ADMIN") {
     const all: Record<string, PermissionLevel> = {};
     for (const f of ALL_FIELDS) all[f.key] = "edit";
-    return NextResponse.json({ permissions: all });
+    return NextResponse.json({ permissions: all }, {
+      headers: { "Cache-Control": "private, max-age=60" },
+    });
   }
 
   // 対象リストを優先度順に構築
@@ -81,5 +83,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ permissions: effective });
+  return NextResponse.json({ permissions: effective }, {
+    headers: { "Cache-Control": "private, max-age=60" },
+  });
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/employees/[id] - Get single employee with relations
@@ -8,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
@@ -27,12 +28,6 @@ export async function GET(
             qualification: true,
           },
           orderBy: { acquiredDate: "desc" },
-        },
-        evaluations: {
-          orderBy: { createdAt: "desc" },
-          include: {
-            period: { select: { name: true } },
-          },
         },
         nameHistories: {
           orderBy: { changedAt: "desc" },
@@ -64,7 +59,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
@@ -87,6 +82,7 @@ export async function PUT(
       firstName,
       lastNameKana,
       firstNameKana,
+      nameChangeReason,
       email,
       phone,
       hireDate,
@@ -151,6 +147,19 @@ export async function PUT(
     }
 
     // Email uniqueness is not enforced (placeholder emails are allowed)
+
+    // 氏名が変わった場合、旧名を履歴に保存
+    const nameChanged = existing.lastName !== lastName || existing.firstName !== firstName;
+    if (nameChanged) {
+      await prisma.employeeNameHistory.create({
+        data: {
+          employeeId: id,
+          lastName: existing.lastName,
+          firstName: existing.firstName,
+          reason: nameChangeReason || null,
+        },
+      });
+    }
 
     const employee = await prisma.employee.update({
       where: { id },
@@ -246,7 +255,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }

@@ -15,7 +15,9 @@ export async function GET() {
       include: { _count: { select: { employees: true } } },
     });
 
-    return NextResponse.json({ companies });
+    return NextResponse.json({ companies }, {
+      headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=300" },
+    });
   } catch (error) {
     console.error("所属企業一覧取得エラー:", error);
     return NextResponse.json({ error: "所属企業一覧の取得に失敗しました" }, { status: 500 });

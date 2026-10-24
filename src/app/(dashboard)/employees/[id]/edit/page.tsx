@@ -3,10 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ interface Department {
   id: string;
   name: string;
   code: string;
+  parentDepartmentId: string | null;
 }
 
 interface Position {
@@ -61,6 +63,8 @@ export default function EditEmployeePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [originalName, setOriginalName] = useState({ lastName: "", firstName: "" });
+  const [nameChangeReason, setNameChangeReason] = useState("");
 
   const [form, setForm] = useState({
     employeeCode: "",
@@ -192,6 +196,7 @@ export default function EditEmployeePage() {
         emergencyContactAddress: data.emergencyContactAddress || "",
         isActive: data.isActive,
       });
+      setOriginalName({ lastName: data.lastName || "", firstName: data.firstName || "" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "取得に失敗しました");
     }
@@ -249,7 +254,7 @@ export default function EditEmployeePage() {
       const res = await fetch(`/api/employees/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, nameChangeReason }),
       });
 
       if (!res.ok) {
@@ -392,6 +397,24 @@ export default function EditEmployeePage() {
                       disabled={can("name") === "view"}
                     />
                   </div>
+                  {can("name") === "edit" &&
+                    (form.lastName !== originalName.lastName || form.firstName !== originalName.firstName) && (
+                    <div className="space-y-2 sm:col-span-2 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-3">
+                      <Label htmlFor="nameChangeReason" className="flex items-center gap-1 text-amber-800 dark:text-amber-400">
+                        <History className="h-3 w-3" />氏名変更理由
+                      </Label>
+                      <Textarea
+                        id="nameChangeReason"
+                        value={nameChangeReason}
+                        onChange={(e) => setNameChangeReason(e.target.value)}
+                        placeholder="例: 結婚、離婚 等"
+                        rows={2}
+                      />
+                      <p className="text-xs text-amber-700 dark:text-amber-500">
+                        変更前: {originalName.lastName} {originalName.firstName}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
               {can("nameKana") !== "hidden" && (
@@ -537,27 +560,58 @@ export default function EditEmployeePage() {
                   </Select>
                 </div>
               )}
-              {can("department") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="departmentId">部署</Label>
-                  <Select
-                    value={form.departmentId}
-                    onValueChange={(value) => handleChange("departmentId", value)}
-                    disabled={can("department") === "view"}
-                  >
-                    <SelectTrigger id="departmentId">
-                      <SelectValue placeholder="選択してください" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              {can("department") !== "hidden" && (() => {
+                const parentDepts = departments.filter(d => d.parentDepartmentId === null);
+                const selectedDept = departments.find(d => d.id === form.departmentId);
+                const isChildDept = selectedDept?.parentDepartmentId != null;
+                const effectiveParentId = isChildDept ? selectedDept!.parentDepartmentId! : form.departmentId;
+                const childDepts = departments.filter(d => d.parentDepartmentId === effectiveParentId);
+                return (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="departmentId">部署</Label>
+                      <Select
+                        value={effectiveParentId || ""}
+                        onValueChange={(value) => handleChange("departmentId", value)}
+                        disabled={can("department") === "view"}
+                      >
+                        <SelectTrigger id="departmentId">
+                          <SelectValue placeholder="選択してください" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {parentDepts.map((dept) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {dept.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {childDepts.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="subDepartmentId">班・グループ</Label>
+                        <Select
+                          value={isChildDept ? form.departmentId : "__none__"}
+                          onValueChange={(value) => handleChange("departmentId", value === "__none__" ? effectiveParentId : value)}
+                          disabled={can("department") === "view"}
+                        >
+                          <SelectTrigger id="subDepartmentId">
+                            <SelectValue placeholder="（なし）" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">（なし）</SelectItem>
+                            {childDepts.map((dept) => (
+                              <SelectItem key={dept.id} value={dept.id}>
+                                {dept.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
               {can("position") !== "hidden" && (
                 <div className="space-y-2">
                   <Label htmlFor="positionId">役職</Label>

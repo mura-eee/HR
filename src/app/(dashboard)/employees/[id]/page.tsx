@@ -76,14 +76,15 @@ interface NameHistory {
   reason: string | null;
 }
 
-interface Evaluation {
+interface EvaluationListItem {
   id: string;
-  evaluationDate: string | null;
-  evaluationPeriod: string | null;
-  overallRating: string | null;
-  score: number | null;
-  evaluatorName: string | null;
-  comments: string | null;
+  status: string;
+  totalScore: number | null;
+  rank: string | null;
+  updatedAt: string;
+  period: { id: string; name: string; year: number; half: string };
+  firstEvaluator: { id: string; lastName: string; firstName: string } | null;
+  secondEvaluator: { id: string; lastName: string; firstName: string } | null;
 }
 
 interface Employee {
@@ -135,7 +136,6 @@ interface Employee {
   position: Position | null;
   jobType: { id: string; name: string } | null;
   qualifications: EmployeeQualification[];
-  evaluations: Evaluation[];
   nameHistories: NameHistory[];
 }
 
@@ -177,6 +177,9 @@ export default function EmployeeDetailPage() {
   const [error, setError] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [evaluations, setEvaluations] = useState<EvaluationListItem[]>([]);
+  const [evaluationsLoaded, setEvaluationsLoaded] = useState(false);
+  const [evaluationsLoading, setEvaluationsLoading] = useState(false);
 
   const fetchEmployee = useCallback(async () => {
     setLoading(true);
@@ -200,6 +203,22 @@ export default function EmployeeDetailPage() {
   useEffect(() => {
     fetchEmployee();
   }, [fetchEmployee]);
+
+  const handleTabChange = useCallback(async (value: string) => {
+    if (value === "evaluations" && !evaluationsLoaded) {
+      setEvaluationsLoading(true);
+      try {
+        const res = await fetch(`/api/evaluations?employeeId=${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setEvaluations(data);
+        }
+      } finally {
+        setEvaluationsLoaded(true);
+        setEvaluationsLoading(false);
+      }
+    }
+  }, [id, evaluationsLoaded]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -287,7 +306,7 @@ export default function EmployeeDetailPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="basic" className="space-y-4">
+      <Tabs defaultValue="basic" className="space-y-4" onValueChange={handleTabChange}>
         <TabsList>
           <TabsTrigger value="basic">
             <User className="mr-2 h-4 w-4" />
@@ -644,45 +663,37 @@ export default function EmployeeDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {employee.evaluations && employee.evaluations.length > 0 ? (
+              {evaluationsLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : evaluations.length > 0 ? (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>評価日</TableHead>
                         <TableHead>評価期間</TableHead>
-                        <TableHead>総合評価</TableHead>
-                        <TableHead>スコア</TableHead>
-                        <TableHead>評価者</TableHead>
-                        <TableHead>コメント</TableHead>
+                        <TableHead>ステータス</TableHead>
+                        <TableHead>総合スコア</TableHead>
+                        <TableHead>ランク</TableHead>
+                        <TableHead>一次評価者</TableHead>
+                        <TableHead>二次評価者</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {employee.evaluations.map((ev) => (
+                      {evaluations.map((ev) => (
                         <TableRow key={ev.id}>
+                          <TableCell>{ev.period?.name ?? "-"}</TableCell>
                           <TableCell>
-                            {formatDate(ev.evaluationDate)}
+                            <Badge variant="outline">{ev.status}</Badge>
+                          </TableCell>
+                          <TableCell>{ev.totalScore !== null ? ev.totalScore : "-"}</TableCell>
+                          <TableCell>{ev.rank ?? "-"}</TableCell>
+                          <TableCell>
+                            {ev.firstEvaluator ? `${ev.firstEvaluator.lastName} ${ev.firstEvaluator.firstName}` : "-"}
                           </TableCell>
                           <TableCell>
-                            {ev.evaluationPeriod || "-"}
-                          </TableCell>
-                          <TableCell>
-                            {ev.overallRating ? (
-                              <Badge variant="outline">
-                                {ev.overallRating}
-                              </Badge>
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {ev.score !== null ? ev.score : "-"}
-                          </TableCell>
-                          <TableCell>
-                            {ev.evaluatorName || "-"}
-                          </TableCell>
-                          <TableCell className="max-w-[300px] truncate">
-                            {ev.comments || "-"}
+                            {ev.secondEvaluator ? `${ev.secondEvaluator.lastName} ${ev.secondEvaluator.firstName}` : "-"}
                           </TableCell>
                         </TableRow>
                       ))}
