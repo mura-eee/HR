@@ -382,6 +382,11 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
   }
   for (const rl of rootLayouts) markDepth(rl, 0);
 
+  // total count including descendants
+  function totalEmpCount(ln: LayoutNode): number {
+    return ln.node.employees.length + ln.children.reduce((s, c) => s + totalEmpCount(c), 0);
+  }
+
   return (
     <div className="overflow-auto">
       <svg
@@ -437,7 +442,7 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
                 fontSize={10}
                 fill="#64748b"
               >
-                {ln.node.employeeCount}名
+                {totalEmpCount(ln)}名
               </text>
               {/* Employees in leaf nodes */}
               {showEmps && ln.node.employees.map((emp, ei) => (
@@ -604,18 +609,30 @@ function GroupedVisualOrgChart({ companyGroups }: { companyGroups: CompanyGroup[
 // ---------------------------------------------------------------------------
 
 function DeptCard({ dept }: { dept: DepartmentNode }) {
-  // collect all employees including children
-  const allEmps: Employee[] = [...dept.employees];
-  function gather(nodes: DepartmentNode[]) {
-    for (const n of nodes) {
-      allEmps.push(...n.employees);
-      gather(n.children);
+  function countAll(node: DepartmentNode): number {
+    return node.employees.length + node.children.reduce((s, c) => s + countAll(c), 0);
+  }
+  function flatEmps(node: DepartmentNode): Employee[] {
+    const result: Employee[] = [...node.employees];
+    for (const c of node.children) result.push(...flatEmps(c));
+    return result;
+  }
+  function sortByPos(emps: Employee[]) {
+    return [...emps].sort((a, b) => (b.position?.level ?? 0) - (a.position?.level ?? 0));
+  }
+  const totalCount = countAll(dept);
+  const sections: { label: string | null; emps: Employee[] }[] = [];
+  if (dept.children.length === 0) {
+    sections.push({ label: null, emps: dept.employees });
+  } else {
+    if (dept.employees.length > 0) {
+      sections.push({ label: "（直属）", emps: dept.employees });
+    }
+    for (const child of dept.children) {
+      const emps = flatEmps(child);
+      if (emps.length > 0) sections.push({ label: child.name, emps });
     }
   }
-  gather(dept.children);
-
-  const totalCount = allEmps.length;
-
   return (
     <Card className="flex flex-col">
       <CardHeader className="pb-2">
@@ -626,37 +643,43 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
             {totalCount}名
           </Badge>
         </div>
-        {dept.children.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {dept.children.map((c) => c.name).join(" / ")}
-          </p>
-        )}
       </CardHeader>
       <CardContent className="flex-1">
-        {allEmps.length > 0 ? (
-          <div className="space-y-1.5">
-            {allEmps.map((emp) => (
-              <Link
-                key={emp.id}
-                href={`/employees/${emp.id}`}
-                className="flex items-center gap-2 py-1 border-b last:border-0 hover:bg-blue-50 rounded px-1 transition-colors"
-              >
-                <Avatar className="w-7 h-7">
-                  <AvatarFallback className="text-xs">
-                    {emp.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">
-                    {emp.lastName} {emp.firstName}
+        {totalCount > 0 ? (
+          <div className="space-y-3">
+            {sections.map((sec, si) => (
+              <div key={si}>
+                {sec.label && (
+                  <p className="text-xs font-semibold text-blue-700 mb-1 border-b border-blue-100 pb-0.5">
+                    {sec.label}
                   </p>
-                  {emp.position && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {emp.position.name}
-                    </p>
-                  )}
+                )}
+                <div className="space-y-1">
+                  {sortByPos(sec.emps).map((emp) => (
+                    <Link
+                      key={emp.id}
+                      href={`/employees/${emp.id}`}
+                      className="flex items-center gap-2 py-1 hover:bg-blue-50 rounded px-1 transition-colors"
+                    >
+                      <Avatar className="w-6 h-6 flex-shrink-0">
+                        <AvatarFallback className="text-xs">
+                          {emp.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">
+                          {emp.lastName} {emp.firstName}
+                        </p>
+                        {emp.position && (
+                          <p className="text-xs text-muted-foreground truncate">
+                            {emp.position.name}
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (
@@ -666,7 +689,6 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
     </Card>
   );
 }
-
 function GroupCardView({ companyGroups }: { companyGroups: CompanyGroup[] }) {
   if (companyGroups.length === 0) {
     return (
