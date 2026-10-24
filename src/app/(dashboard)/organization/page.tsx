@@ -568,6 +568,38 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Grouped Visual Org Chart (全体表示: 会社ごとに分けたビジュアル)
+// ---------------------------------------------------------------------------
+
+function GroupedVisualOrgChart({ companyGroups }: { companyGroups: CompanyGroup[] }) {
+  if (companyGroups.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        部署データがありません
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-8">
+      {companyGroups.map((company) => (
+        <div key={company.id}>
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+            <Building2 className="w-5 h-5 text-blue-600" />
+            <h2 className="text-base font-bold">{company.name}</h2>
+            <span className="text-sm text-muted-foreground">{company.totalCount}名</span>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <VisualOrgChart departments={company.departments as DepartmentNode[]} />
+            </CardContent>
+          </Card>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Group Card View (全体表示: 会社ごとにセクション分け)
 // ---------------------------------------------------------------------------
 
@@ -754,11 +786,15 @@ export default function OrganizationPage() {
         </TabsList>
 
         <TabsContent value="visual" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <VisualOrgChart departments={departments} />
-            </CardContent>
-          </Card>
+          {!selectedCompanyId && companyGroups.length > 0 ? (
+            <GroupedVisualOrgChart companyGroups={companyGroups} />
+          ) : (
+            <Card>
+              <CardContent className="pt-6">
+                <VisualOrgChart departments={departments} />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="tree" className="mt-4">
