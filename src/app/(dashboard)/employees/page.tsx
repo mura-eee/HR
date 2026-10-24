@@ -42,6 +42,7 @@ interface Department {
   id: string;
   name: string;
   code: string;
+  parentDepartment: { id: string; name: string } | null;
 }
 
 interface Position {
@@ -415,7 +416,13 @@ export default function EmployeesPage() {
                             </TableCell>
                           )}
                           {showDepartment && (
-                            <TableCell>{employee.department?.name || "-"}</TableCell>
+                            <TableCell>
+                              {employee.department
+                                ? employee.department.parentDepartment
+                                  ? `${employee.department.parentDepartment.name} / ${employee.department.name}`
+                                  : employee.department.name
+                                : "-"}
+                            </TableCell>
                           )}
                           {showPosition && (
                             <TableCell>{employee.position?.name || "-"}</TableCell>

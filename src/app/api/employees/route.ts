@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           company: { select: { id: true, name: true } },
-          department: { select: { id: true, name: true, code: true } },
+          department: { select: { id: true, name: true, code: true, parentDepartment: { select: { id: true, name: true } } } },
           position: { select: { id: true, name: true, level: true } },
           jobType: { select: { id: true, name: true } },
         },

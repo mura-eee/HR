@@ -47,6 +47,7 @@ interface Department {
   id: string;
   name: string;
   code: string;
+  parentDepartment: { id: string; name: string } | null;
 }
 
 interface Position {
@@ -433,7 +434,14 @@ export default function EmployeeDetailPage() {
                 {can("department") !== "hidden" && (
                   <div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1"><Building2 className="h-3 w-3" />部署</p>
-                    <p className="font-medium">{employee.department?.name || "-"}</p>
+                    <p className="font-medium">
+                      {employee.department?.parentDepartment
+                        ? employee.department.parentDepartment.name
+                        : employee.department?.name || "-"}
+                    </p>
+                    {employee.department?.parentDepartment && (
+                      <p className="text-sm text-muted-foreground mt-0.5">班・グループ: {employee.department.name}</p>
+                    )}
                   </div>
                 )}
                 {can("position") !== "hidden" && (
