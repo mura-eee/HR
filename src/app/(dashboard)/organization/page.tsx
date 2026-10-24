@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   GitFork,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -48,6 +49,14 @@ interface DepartmentNode {
   employeeCount: number;
   employees: Employee[];
   children: DepartmentNode[];
+}
+
+interface CompanyGroup {
+  id: string;
+  name: string;
+  sortOrder: number;
+  totalCount: number;
+  departments: DepartmentNode[];
 }
 
 // ---------------------------------------------------------------------------
@@ -559,12 +568,113 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Group Card View (全体表示: 会社ごとにセクション分け)
+// ---------------------------------------------------------------------------
+
+function DeptCard({ dept }: { dept: DepartmentNode }) {
+  // collect all employees including children
+  const allEmps: Employee[] = [...dept.employees];
+  function gather(nodes: DepartmentNode[]) {
+    for (const n of nodes) {
+      allEmps.push(...n.employees);
+      gather(n.children);
+    }
+  }
+  gather(dept.children);
+
+  const totalCount = allEmps.length;
+
+  return (
+    <Card className="flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold">{dept.name}</CardTitle>
+          <Badge variant="secondary" className="text-xs">
+            <Users className="w-3 h-3 mr-0.5" />
+            {totalCount}名
+          </Badge>
+        </div>
+        {dept.children.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {dept.children.map((c) => c.name).join(" / ")}
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="flex-1">
+        {allEmps.length > 0 ? (
+          <div className="space-y-1.5">
+            {allEmps.map((emp) => (
+              <Link
+                key={emp.id}
+                href={`/employees/${emp.id}`}
+                className="flex items-center gap-2 py-1 border-b last:border-0 hover:bg-blue-50 rounded px-1 transition-colors"
+              >
+                <Avatar className="w-7 h-7">
+                  <AvatarFallback className="text-xs">
+                    {emp.lastName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium truncate">
+                    {emp.lastName} {emp.firstName}
+                  </p>
+                  {emp.position && (
+                    <p className="text-xs text-muted-foreground truncate">
+                      {emp.position.name}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">所属社員はいません</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function GroupCardView({ companyGroups }: { companyGroups: CompanyGroup[] }) {
+  if (companyGroups.length === 0) {
+    return (
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
+        データがありません
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {companyGroups.map((company) => (
+        <div key={company.id}>
+          <div className="flex items-center gap-2 mb-3">
+            <Building2 className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-bold">{company.name}</h2>
+            <Badge variant="outline" className="ml-1">
+              <Users className="w-3 h-3 mr-0.5" />
+              {company.totalCount}名
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {company.departments.map((dept) => (
+              <DeptCard key={dept.id} dept={dept} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Page Component
 // ---------------------------------------------------------------------------
 
 export default function OrganizationPage() {
   const { selectedCompanyId } = useCompany();
   const [departments, setDepartments] = useState<DepartmentNode[]>([]);
+  const [companyGroups, setCompanyGroups] = useState<CompanyGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -577,6 +687,14 @@ export default function OrganizationPage() {
         if (res.ok) {
           const data = await res.json();
           setDepartments(data.departments);
+        }
+
+        if (!selectedCompanyId) {
+          const groupRes = await fetch("/api/organizations/group");
+          if (groupRes.ok) {
+            const groupData = await groupRes.json();
+            setCompanyGroups(groupData.companies);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch organization data:", error);
@@ -627,6 +745,12 @@ export default function OrganizationPage() {
             <LayoutGrid className="w-4 h-4" />
             カード表示
           </TabsTrigger>
+          {!selectedCompanyId && (
+            <TabsTrigger value="group" className="gap-1.5">
+              <Building2 className="w-4 h-4" />
+              グループ
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="visual" className="mt-4">
@@ -648,6 +772,12 @@ export default function OrganizationPage() {
         <TabsContent value="card" className="mt-4">
           <CardView departments={departments} />
         </TabsContent>
+
+        {!selectedCompanyId && (
+          <TabsContent value="group" className="mt-4">
+            <GroupCardView companyGroups={companyGroups} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
