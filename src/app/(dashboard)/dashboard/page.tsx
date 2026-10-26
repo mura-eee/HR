@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cachedFetch } from "@/lib/client-cache";
 import { useSession } from "next-auth/react";
 import { useCompany } from "@/components/providers/company-provider";
 import {
@@ -45,11 +46,8 @@ export default function DashboardPage() {
         const url = selectedCompanyId
           ? `/api/dashboard?companyId=${selectedCompanyId}`
           : "/api/dashboard";
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
-        }
+        const data = await cachedFetch<DashboardStats>(url);
+        setStats(data);
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
       } finally {

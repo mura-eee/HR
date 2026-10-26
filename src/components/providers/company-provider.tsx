@@ -5,6 +5,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useLayoutEffect,
   useCallback,
   ReactNode,
 } from "react";
@@ -38,6 +39,7 @@ const GROUP_NAME = "トキトグループ";
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
   const [companies, setCompanies] = useState<Company[]>([]);
+  // SSR時はnull（ハイドレーション一致）、クライアントのpaint前にlocalStorageから復元
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   const refreshCompanies = useCallback(async () => {
@@ -51,10 +53,14 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 初期化: localStorageから復元 + 会社一覧取得
-  useEffect(() => {
+  // useLayoutEffect: paint前に同期実行 → ユーザーにflashが見えず、二重フェッチも起きない
+  useLayoutEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) setSelectedCompanyId(saved === "null" ? null : saved);
+  }, []);
+
+  // 会社一覧取得
+  useEffect(() => {
     refreshCompanies();
   }, [refreshCompanies]);
 

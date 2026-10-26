@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { cachedFetch } from "@/lib/client-cache";
 import { useCompany } from "@/components/providers/company-provider";
 import { useFieldPermissions } from "@/hooks/useFieldPermissions";
 import Link from "next/link";
@@ -140,11 +141,8 @@ export default function EmployeesPage() {
 
   const fetchDepartments = useCallback(async () => {
     try {
-      const res = await fetch("/api/departments");
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(Array.isArray(data) ? data : data.departments || []);
-      }
+      const data = await cachedFetch<{departments: Department[]} | Department[]>("/api/departments");
+      setDepartments(Array.isArray(data) ? data : (data as {departments: Department[]}).departments || []);
     } catch (error) {
       console.error("部署一覧取得エラー:", error);
     }

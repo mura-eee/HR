@@ -1,4 +1,5 @@
 "use client";
+import { cachedFetch } from "@/lib/client-cache";
 
 import { useEffect, useState, useCallback } from "react";
 import { useCompany } from "@/components/providers/company-provider";
@@ -785,18 +786,12 @@ export default function OrganizationPage() {
         const url = selectedCompanyId
           ? `/api/organizations?companyId=${selectedCompanyId}`
           : "/api/organizations";
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          setDepartments(data.departments);
-        }
+        const data = await cachedFetch<{departments: DepartmentNode[]}>(url);
+        setDepartments(data.departments);
 
         if (!selectedCompanyId) {
-          const groupRes = await fetch("/api/organizations/group", { cache: "no-store" });
-          if (groupRes.ok) {
-            const groupData = await groupRes.json();
-            setCompanyGroups(groupData.companies);
-          }
+          const groupData = await cachedFetch<{companies: CompanyGroup[]}>("/api/organizations/group", 20000);
+          setCompanyGroups(groupData.companies);
         }
       } catch (error) {
         console.error("Failed to fetch organization data:", error);
