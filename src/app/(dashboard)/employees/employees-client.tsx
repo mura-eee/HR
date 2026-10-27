@@ -353,7 +353,7 @@ export default function EmployeesClient({
                     <p className="font-medium">Excel出力（名簿）</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    在籍スタッフの名簿をExcelファイルに出力します。計上会社・勤務先・部署・役職・氏名・雇用区分を含みます。
+                    全スタッフの個人情報をExcelに出力します。基本情報・給与・社会保険・緊急連絡先など全項目を含み、そのまま取込にも使用できます。
                   </p>
                   <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
