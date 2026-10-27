@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getServerCompanyId } from "@/lib/server-company";
+import { getCachedEmployees, getCachedDepartments } from "@/lib/server-cache";
 import EmployeesClient from "./employees-client";
 
 export default async function EmployeesPage() {
@@ -11,41 +11,12 @@ export default async function EmployeesPage() {
 
   const companyId = await getServerCompanyId();
 
-  const where = {
-    isActive: true,
-    ...(companyId ? { companyId } : {}),
-  };
+  const [{ employees, total }, departments] = await Promise.all([
+    getCachedEmployees(companyId),
+    getCachedDepartments(),
+  ]);
 
   const limit = 10;
-
-  const [employees, total, departments] = await Promise.all([
-    prisma.employee.findMany({
-      where,
-      include: {
-        department: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            parentDepartment: { select: { id: true, name: true } },
-          },
-        },
-        position: { select: { id: true, name: true, level: true } },
-      },
-      orderBy: { employeeCode: "asc" },
-      take: limit,
-    }),
-    prisma.employee.count({ where }),
-    prisma.department.findMany({
-      select: {
-        id: true,
-        name: true,
-        code: true,
-        parentDepartment: { select: { id: true, name: true } },
-      },
-      orderBy: { sortOrder: "asc" },
-    }),
-  ]);
 
   const initialEmployees = employees.map((e) => ({
     id: e.id,

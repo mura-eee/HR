@@ -228,7 +228,12 @@ export default function EmployeesClient({
     setAffiliationOpen((prev) => !prev);
   };
 
+  // CompanyProviderはSSR時にnullで始まり、useLayoutEffectで実値になる。
+  // nullのまま確定していない間はフェッチしない。
+  const companyResolved = useRef(false);
   useEffect(() => {
+    if (selectedCompanyId === null && !companyResolved.current) return;
+    companyResolved.current = true;
     if (selectedCompanyId === renderedCompanyId.current) return;
     renderedCompanyId.current = selectedCompanyId;
     fetchDepartments();

@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getServerCompanyId } from "@/lib/server-company";
+import { getCachedOrgDepartments } from "@/lib/server-cache";
 import OrgChartClient from "./org-chart-client";
 
 interface EmployeeData {
@@ -66,28 +67,8 @@ export default async function OrganizationPage() {
   if (!session) redirect("/login");
 
   const companyId = await getServerCompanyId();
-  const employeeWhere = companyId
-    ? { isActive: true, companyId }
-    : { isActive: true };
 
-  const depts = await prisma.department.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: {
-      employees: {
-        where: employeeWhere,
-        select: {
-          id: true,
-          employeeCode: true,
-          lastName: true,
-          firstName: true,
-          profileImage: true,
-          isActive: true,
-          position: { select: { id: true, name: true, level: true } },
-        },
-        orderBy: [{ position: { level: "desc" } }, { employeeCode: "asc" }],
-      },
-    },
-  });
+  const depts = await getCachedOrgDepartments(companyId);
 
   const initialDepartments = buildTree(depts, null);
 
@@ -102,24 +83,7 @@ export default async function OrganizationPage() {
   if (!companyId) {
     const companies = await prisma.company.findMany({ orderBy: { sortOrder: "asc" } });
     for (const company of companies) {
-      const companyDepts = await prisma.department.findMany({
-        orderBy: { sortOrder: "asc" },
-        include: {
-          employees: {
-            where: { isActive: true, companyId: company.id },
-            select: {
-              id: true,
-              employeeCode: true,
-              lastName: true,
-              firstName: true,
-              profileImage: true,
-              isActive: true,
-              position: { select: { id: true, name: true, level: true } },
-            },
-            orderBy: [{ position: { level: "desc" } }, { employeeCode: "asc" }],
-          },
-        },
-      });
+      const companyDepts = await getCachedOrgDepartments(company.id);
 
       const tree = buildTree(companyDepts, null)
         .map(pruneEmpty)

@@ -777,8 +777,10 @@ export default function OrgChartClient({
   // Track what company data is currently rendered (starts with what the server pre-fetched)
   const renderedCompanyId = useRef<string | null>(initialCompanyId);
 
+  const companyResolved = useRef(false);
   useEffect(() => {
-    // Skip when selectedCompanyId matches what's already rendered (no actual change)
+    if (selectedCompanyId === null && !companyResolved.current) return;
+    companyResolved.current = true;
     if (selectedCompanyId === renderedCompanyId.current) return;
     renderedCompanyId.current = selectedCompanyId;
     async function fetchOrganization() {

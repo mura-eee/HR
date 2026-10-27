@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getServerCompanyId } from "@/lib/server-company";
+import { getCachedDashboardStats } from "@/lib/server-cache";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, ClipboardCheck, Award, TrendingUp, Clock } from "lucide-react";
@@ -28,46 +28,15 @@ export default async function DashboardPage() {
   if (!session) redirect("/login");
 
   const companyId = await getServerCompanyId();
-  const companyFilter = companyId ? { companyId } : {};
 
-  const [
+  const {
     totalEmployees,
     totalDepartments,
     activeEvaluations,
     totalQualifications,
     departmentBreakdown,
     recentEvaluations,
-  ] = await Promise.all([
-    prisma.employee.count({ where: { isActive: true, ...companyFilter } }),
-    prisma.department.count(),
-    prisma.evaluation.count({
-      where: {
-        status: { not: "COMPLETED" },
-        ...(companyId ? { employee: { companyId } } : {}),
-      },
-    }),
-    prisma.employeeQualification.count({
-      where: companyId ? { employee: { companyId } } : {},
-    }),
-    prisma.department.findMany({
-      select: {
-        name: true,
-        _count: {
-          select: { employees: { where: { isActive: true, ...companyFilter } } },
-        },
-      },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.evaluation.findMany({
-      take: 5,
-      orderBy: { updatedAt: "desc" },
-      where: companyId ? { employee: { companyId } } : {},
-      include: {
-        employee: { select: { lastName: true, firstName: true } },
-        period: { select: { name: true } },
-      },
-    }),
-  ]);
+  } = await getCachedDashboardStats(companyId);
 
   const breakdown = departmentBreakdown
     .filter((d) => d._count.employees > 0)
