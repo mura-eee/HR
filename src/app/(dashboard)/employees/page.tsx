@@ -26,7 +26,7 @@ export default async function EmployeesPage() {
     lastNameKana: e.lastNameKana,
     firstNameKana: e.firstNameKana,
     email: e.email,
-    hireDate: e.hireDate ? e.hireDate.toISOString() : null,
+    hireDate: e.hireDate ? new Date(e.hireDate).toISOString() : null,
     grade: e.grade,
     isActive: e.isActive,
     department: e.department,
