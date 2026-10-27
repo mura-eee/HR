@@ -18,6 +18,11 @@ import {
   Download,
   Upload,
   UserX,
+  FileSpreadsheet,
+  History,
+  Building2,
+  FileDown,
+  FileUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,6 +49,7 @@ interface Department {
   name: string;
   code: string;
   parentDepartment: { id: string; name: string } | null;
+  _count?: { employees: number };
 }
 
 interface Position {
@@ -72,6 +78,20 @@ interface PaginationInfo {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+interface NameHistory {
+  id: string;
+  lastName: string;
+  firstName: string;
+  changedAt: string;
+  reason: string | null;
+  employee: {
+    id: string;
+    employeeCode: string;
+    lastName: string;
+    firstName: string;
+  };
 }
 
 type SortField = "employeeCode" | "lastName" | "hireDate" | "grade";
@@ -113,8 +133,11 @@ export default function EmployeesClient({
   const [retiredLoading, setRetiredLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const [nameHistories, setNameHistories] = useState<NameHistory[]>([]);
+  const [nameHistoryOpen, setNameHistoryOpen] = useState(false);
+  const [nameHistoryLoading, setNameHistoryLoading] = useState(false);
+  const [affiliationOpen, setAffiliationOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // Track what company data is currently rendered (starts with what the server pre-fetched)
   const renderedCompanyId = useRef<string | null>(initialCompanyId);
 
   const fetchEmployees = useCallback(async () => {
@@ -170,6 +193,20 @@ export default function EmployeesClient({
     }
   }, [selectedCompanyId]);
 
+  const fetchNameHistory = useCallback(async () => {
+    setNameHistoryLoading(true);
+    try {
+      const res = await fetch("/api/employees/name-history");
+      if (!res.ok) return;
+      const data = await res.json();
+      setNameHistories(data.histories || []);
+    } catch (error) {
+      console.error("氏名変更履歴取得エラー:", error);
+    } finally {
+      setNameHistoryLoading(false);
+    }
+  }, []);
+
   const handleToggleRetired = () => {
     if (!retiredOpen && retiredEmployees.length === 0) {
       fetchRetiredEmployees();
@@ -177,7 +214,20 @@ export default function EmployeesClient({
     setRetiredOpen((prev) => !prev);
   };
 
-  // Only re-fetch when company actually changes (not on initial hydration)
+  const handleToggleNameHistory = () => {
+    if (!nameHistoryOpen && nameHistories.length === 0) {
+      fetchNameHistory();
+    }
+    setNameHistoryOpen((prev) => !prev);
+  };
+
+  const handleToggleAffiliation = () => {
+    if (!affiliationOpen) {
+      fetchDepartments();
+    }
+    setAffiliationOpen((prev) => !prev);
+  };
+
   useEffect(() => {
     if (selectedCompanyId === renderedCompanyId.current) return;
     renderedCompanyId.current = selectedCompanyId;
@@ -186,7 +236,6 @@ export default function EmployeesClient({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCompanyId]);
 
-  // Re-fetch when pagination/search/sort change (user interaction, skip initial render)
   const isFirstParamsRender = useRef(true);
   useEffect(() => {
     if (isFirstParamsRender.current) { isFirstParamsRender.current = false; return; }
@@ -225,7 +274,7 @@ export default function EmployeesClient({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `employees_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    a.download = `meibo_${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -261,57 +310,103 @@ export default function EmployeesClient({
     );
   };
 
+  // 部署別所属人数（子部署を除く親部署のみ表示）
+  const topLevelDepts = departments.filter((d) => !d.parentDepartment);
+
   return (
     <div className="space-y-6">
+      {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="h-6 w-6" />
-          <h1 className="text-2xl font-bold">社員管理</h1>
+          <h1 className="text-2xl font-bold">スタッフ管理</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            className="hidden"
-            onChange={handleImport}
-          />
-          {can("employeeImport") !== "hidden" && (
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-              <Upload className="mr-2 h-4 w-4" />
-              {importing ? "取込中..." : "Excel取込"}
-            </Button>
-          )}
-          {can("employeeExport") !== "hidden" && (
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              Excel出力
-            </Button>
-          )}
-          <Link href="/employees/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </Link>
-        </div>
+        <Link href="/employees/new">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </Link>
       </div>
 
-      {importResult && (
-        <div className={`rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
-          <p className="font-medium mb-1">インポート結果</p>
-          <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
-          {importResult.errors.length > 0 && (
-            <ul className="mt-2 space-y-1 text-yellow-800">
-              {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
-            </ul>
-          )}
-        </div>
+      {/* データ管理 */}
+      {(can("employeeImport") !== "hidden" || can("employeeExport") !== "hidden") && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FileSpreadsheet className="h-5 w-5" />
+              データ管理
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Excel出力 */}
+              {can("employeeExport") !== "hidden" && (
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileDown className="h-5 w-5 text-green-600" />
+                    <p className="font-medium">Excel出力（名簿）</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    在籍スタッフの名簿をExcelファイルに出力します。計上会社・勤務先・部署・役職・氏名・雇用区分を含みます。
+                  </p>
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Excelで出力する
+                  </Button>
+                </div>
+              )}
+
+              {/* Excel取込 */}
+              {can("employeeImport") !== "hidden" && (
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileUp className="h-5 w-5 text-blue-600" />
+                    <p className="font-medium">Excel取込</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Excelファイルからスタッフデータを一括取込します。社員コードが一致する場合は更新、存在しない場合は新規登録します。
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={handleImport}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {importing ? "取込中..." : "Excelファイルを選択して取込"}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* インポート結果 */}
+            {importResult && (
+              <div className={`mt-4 rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
+                <p className="font-medium mb-1">取込結果</p>
+                <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
+                {importResult.errors.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-yellow-800">
+                    {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
+      {/* 社員一覧 */}
       <Card>
         <CardHeader>
-          <CardTitle>社員一覧</CardTitle>
+          <CardTitle>スタッフ一覧</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -397,7 +492,7 @@ export default function EmployeesClient({
                           colSpan={colSpan}
                           className="text-center py-8 text-muted-foreground"
                         >
-                          社員データがありません
+                          スタッフデータがありません
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -514,6 +609,7 @@ export default function EmployeesClient({
         </CardContent>
       </Card>
 
+      {/* 退職者 */}
       <Card>
         <CardHeader
           className="cursor-pointer select-none"
@@ -574,6 +670,139 @@ export default function EmployeesClient({
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+          </CardContent>
+        )}
+      </Card>
+
+      {/* 氏名変更履歴 */}
+      {can("name") !== "hidden" && (
+        <Card>
+          <CardHeader
+            className="cursor-pointer select-none"
+            onClick={handleToggleNameHistory}
+          >
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-muted-foreground">
+                <History className="h-5 w-5" />
+                氏名変更履歴
+              </CardTitle>
+              <ChevronDown
+                className={`h-5 w-5 text-muted-foreground transition-transform ${nameHistoryOpen ? "rotate-180" : ""}`}
+              />
+            </div>
+          </CardHeader>
+          {nameHistoryOpen && (
+            <CardContent>
+              {nameHistoryLoading ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">読み込み中...</p>
+              ) : nameHistories.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">氏名変更履歴はありません</p>
+              ) : (
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>社員コード</TableHead>
+                        <TableHead>変更前の氏名</TableHead>
+                        <TableHead>現在の氏名</TableHead>
+                        <TableHead>変更日</TableHead>
+                        <TableHead>変更理由</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {nameHistories.map((h) => (
+                        <TableRow
+                          key={h.id}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => router.push(`/employees/${h.employee.id}`)}
+                        >
+                          <TableCell className="font-mono">{h.employee.employeeCode}</TableCell>
+                          <TableCell className="text-muted-foreground">{h.lastName} {h.firstName}</TableCell>
+                          <TableCell className="font-medium">{h.employee.lastName} {h.employee.firstName}</TableCell>
+                          <TableCell>{formatDate(h.changedAt)}</TableCell>
+                          <TableCell>
+                            {h.reason ? (
+                              <Badge variant="outline" className="text-xs">{h.reason}</Badge>
+                            ) : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          )}
+        </Card>
+      )}
+
+      {/* 所属一覧 */}
+      <Card>
+        <CardHeader
+          className="cursor-pointer select-none"
+          onClick={handleToggleAffiliation}
+        >
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-5 w-5" />
+              所属一覧
+            </CardTitle>
+            <ChevronDown
+              className={`h-5 w-5 text-muted-foreground transition-transform ${affiliationOpen ? "rotate-180" : ""}`}
+            />
+          </div>
+        </CardHeader>
+        {affiliationOpen && (
+          <CardContent>
+            {departments.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">部署データがありません</p>
+            ) : (
+              <div className="space-y-4">
+                {topLevelDepts.map((dept) => {
+                  const childDepts = departments.filter((d) => d.parentDepartment?.id === dept.id);
+                  const deptCount = dept._count?.employees ?? 0;
+                  const childTotal = childDepts.reduce((sum, d) => sum + (d._count?.employees ?? 0), 0);
+                  const total = deptCount + childTotal;
+
+                  return (
+                    <div key={dept.id} className="rounded-lg border p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{dept.name}</span>
+                        </div>
+                        <Badge variant="secondary">{total}名</Badge>
+                      </div>
+                      {childDepts.length > 0 && (
+                        <div className="ml-6 space-y-1">
+                          {deptCount > 0 && (
+                            <div className="flex items-center justify-between text-sm text-muted-foreground py-0.5">
+                              <span>（本部直属）</span>
+                              <span>{deptCount}名</span>
+                            </div>
+                          )}
+                          {childDepts.map((child) => (
+                            <div key={child.id} className="flex items-center justify-between text-sm py-0.5 border-l-2 pl-3">
+                              <span>{child.name}</span>
+                              <span className="text-muted-foreground">{child._count?.employees ?? 0}名</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* 部署未設定 */}
+                {employees.filter((e) => !e.department).length > 0 && (
+                  <div className="rounded-lg border border-dashed p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">部署未設定</span>
+                      <Badge variant="outline">{employees.filter((e) => !e.department).length}名</Badge>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
