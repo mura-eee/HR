@@ -165,6 +165,7 @@ model EmployeeQualification {
   acquiredDate      DateTime?
   expiryDate        DateTime?
   certificateNumber String?
+  certificateUrl    String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

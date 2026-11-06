@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { employeeId, qualificationId, acquiredDate, expiryDate, certificateNumber } = body;
+    const { employeeId, qualificationId, acquiredDate, expiryDate, certificateNumber, certificateUrl } = body;
 
     if (!employeeId || !qualificationId) {
       return NextResponse.json(
@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         acquiredDate: acquiredDate ? new Date(acquiredDate) : null,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
         certificateNumber: certificateNumber || null,
+        certificateUrl: certificateUrl || null,
       },
       include: {
         employee: {

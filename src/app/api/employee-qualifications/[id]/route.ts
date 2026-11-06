@@ -16,7 +16,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { acquiredDate, expiryDate, certificateNumber } = body;
+    const { acquiredDate, expiryDate, certificateNumber, certificateUrl } = body;
 
     const employeeQualification = await prisma.employeeQualification.update({
       where: { id },
@@ -24,6 +24,7 @@ export async function PUT(
         acquiredDate: acquiredDate ? new Date(acquiredDate) : null,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
         certificateNumber: certificateNumber || null,
+        certificateUrl: certificateUrl || null,
       },
       include: {
         employee: {

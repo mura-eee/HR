@@ -47,6 +47,7 @@ import {
   Search,
   Download,
   Upload,
+  ExternalLink,
 } from "lucide-react";
 
 // --- Types ---
@@ -73,6 +74,7 @@ interface EmployeeQualification {
   acquiredDate: string | null;
   expiryDate: string | null;
   certificateNumber: string | null;
+  certificateUrl: string | null;
   employee: Employee;
   qualification: {
     id: string;
@@ -128,6 +130,7 @@ function QualificationsContent() {
     acquiredDate: "",
     expiryDate: "",
     certificateNumber: "",
+    certificateUrl: "",
   });
 
   // Filter state
@@ -284,6 +287,7 @@ function QualificationsContent() {
         acquiredDate: eq.acquiredDate ? eq.acquiredDate.slice(0, 10) : "",
         expiryDate: eq.expiryDate ? eq.expiryDate.slice(0, 10) : "",
         certificateNumber: eq.certificateNumber || "",
+        certificateUrl: eq.certificateUrl || "",
       });
     } else {
       setEditingEmpQual(null);
@@ -293,6 +297,7 @@ function QualificationsContent() {
         acquiredDate: "",
         expiryDate: "",
         certificateNumber: "",
+        certificateUrl: "",
       });
     }
     setEmpQualDialogOpen(true);
@@ -665,6 +670,7 @@ function QualificationsContent() {
                       <TableHead>取得日</TableHead>
                       <TableHead>有効期限</TableHead>
                       <TableHead>証明書番号</TableHead>
+                      <TableHead>資格証</TableHead>
                       <TableHead className="text-right">操作</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -705,6 +711,21 @@ function QualificationsContent() {
                             </div>
                           </TableCell>
                           <TableCell>{eq.certificateNumber || "-"}</TableCell>
+                          <TableCell>
+                            {eq.certificateUrl ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-7"
+                                onClick={() => window.open(eq.certificateUrl!, "_blank")}
+                              >
+                                <ExternalLink className="w-3 h-3 mr-1" />
+                                証を見る
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">-</span>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
                               <Button
@@ -878,6 +899,20 @@ function QualificationsContent() {
                   })
                 }
                 placeholder="例: CERT-12345"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="eq-url">資格証URL（OneDriveリンクなど）</Label>
+              <Input
+                id="eq-url"
+                value={empQualForm.certificateUrl}
+                onChange={(e) =>
+                  setEmpQualForm({
+                    ...empQualForm,
+                    certificateUrl: e.target.value,
+                  })
+                }
+                placeholder="https://..."
               />
             </div>
           </div>

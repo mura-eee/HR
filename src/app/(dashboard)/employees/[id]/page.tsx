@@ -21,6 +21,7 @@ import {
   Shield,
   Heart,
   History,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ interface EmployeeQualification {
   id: string;
   acquiredDate: string | null;
   expiryDate: string | null;
+  certificateUrl: string | null;
   qualification: Qualification;
 }
 
@@ -609,6 +611,7 @@ export default function EmployeeDetailPage() {
                         <TableHead>取得日</TableHead>
                         <TableHead>有効期限</TableHead>
                         <TableHead>ステータス</TableHead>
+                        <TableHead>資格証</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -644,6 +647,21 @@ export default function EmployeeDetailPage() {
                                 </Badge>
                               ) : (
                                 <Badge variant="outline">無期限</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {eq.certificateUrl ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs h-7"
+                                  onClick={() => window.open(eq.certificateUrl!, "_blank")}
+                                >
+                                  <ExternalLink className="w-3 h-3 mr-1" />
+                                  証を見る
+                                </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
                               )}
                             </TableCell>
                           </TableRow>

@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     acquiredDate: Date | null;
     expiryDate: Date | null;
     certificateNumber: string | null;
+    certificateUrl: string | null;
   };
   const parsed: ParsedRow[] = [];
 
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
       acquiredDate: parseDate(row["取得日"]),
       expiryDate: parseDate(row["有効期限"]),
       certificateNumber: String(row["証明書番号"] ?? "").trim() || null,
+      certificateUrl: String(row["資格証URL"] ?? "").trim() || null,
     });
   }
 
@@ -115,6 +117,7 @@ export async function POST(request: NextRequest) {
     acquiredDate: Date | null;
     expiryDate: Date | null;
     certificateNumber: string | null;
+    certificateUrl: string | null;
   };
   const ops: Op[] = [];
 
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest) {
         acquiredDate: op.acquiredDate,
         expiryDate: op.expiryDate,
         certificateNumber: op.certificateNumber,
+        certificateUrl: op.certificateUrl,
       })),
       skipDuplicates: true,
     });
@@ -171,9 +175,9 @@ export async function POST(request: NextRequest) {
     for (const op of toUpdate) {
       const id = existingMap.get(`${op.employeeId}_${op.qualificationId}`)!;
       placeholders.push(
-        `($${pIdx++}::text, $${pIdx++}::timestamptz, $${pIdx++}::timestamptz, $${pIdx++}::text)`
+        `($${pIdx++}::text, $${pIdx++}::timestamptz, $${pIdx++}::timestamptz, $${pIdx++}::text, $${pIdx++}::text)`
       );
-      params.push(id, op.acquiredDate, op.expiryDate, op.certificateNumber);
+      params.push(id, op.acquiredDate, op.expiryDate, op.certificateNumber, op.certificateUrl);
     }
 
     await prisma.$executeRawUnsafe(
@@ -181,8 +185,9 @@ export async function POST(request: NextRequest) {
        SET "acquiredDate" = v.ad,
            "expiryDate"   = v.ed,
            "certificateNumber" = v.cn,
+           "certificateUrl"    = v.url,
            "updatedAt"    = NOW()
-       FROM (VALUES ${placeholders.join(",")}) AS v(id, ad, ed, cn)
+       FROM (VALUES ${placeholders.join(",")}) AS v(id, ad, ed, cn, url)
        WHERE eq.id = v.id`,
       ...params
     );

@@ -38,6 +38,7 @@ export async function GET() {
     "取得日": formatDate(r.acquiredDate),
     "有効期限": formatDate(r.expiryDate),
     "証明書番号": r.certificateNumber || "",
+    "資格証URL": r.certificateUrl || "",
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
@@ -48,6 +49,7 @@ export async function GET() {
     { wch: 12 },
     { wch: 12 },
     { wch: 20 },
+    { wch: 60 },
   ];
 
   const wb = XLSX.utils.book_new();
