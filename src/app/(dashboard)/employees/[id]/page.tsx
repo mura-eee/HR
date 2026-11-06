@@ -97,7 +97,7 @@ interface Employee {
   firstName: string;
   lastNameKana: string | null;
   firstNameKana: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   hireDate: string | null;
   birthDate: string | null;
