@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Network,
   LayoutGrid,
@@ -163,6 +163,7 @@ function TreeNode({
               className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white hover:bg-blue-50 hover:border-blue-300 transition-all"
             >
               <Avatar className="w-7 h-7">
+                <AvatarImage src={emp.profileImage ?? undefined} />
                 <AvatarFallback className="text-xs">
                   {emp.lastName.charAt(0)}
                 </AvatarFallback>
@@ -514,6 +515,7 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
                   className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-blue-50 hover:border-blue-300 transition-all"
                 >
                   <Avatar className="w-7 h-7">
+                    <AvatarImage src={emp.profileImage ?? undefined} />
                     <AvatarFallback className="text-xs">{emp.lastName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
@@ -583,6 +585,7 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
                     className="flex items-center gap-3 py-1.5 border-b last:border-0 hover:bg-blue-50 rounded px-1 transition-colors"
                   >
                     <Avatar className="w-8 h-8">
+                      <AvatarImage src={emp.profileImage ?? undefined} />
                       <AvatarFallback className="text-xs">
                         {emp.lastName.charAt(0)}
                       </AvatarFallback>
@@ -717,6 +720,7 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
                       className="flex items-center gap-2 py-1 hover:bg-blue-50 rounded px-1 transition-colors"
                     >
                       <Avatar className="w-6 h-6 flex-shrink-0">
+                        <AvatarImage src={emp.profileImage ?? undefined} />
                         <AvatarFallback className="text-xs">
                           {emp.lastName.charAt(0)}
                         </AvatarFallback>

@@ -126,6 +126,7 @@ export const getCachedEmployees = unstable_cache(
               parentDepartment: { select: { id: true, name: true } },
             },
           },
+          profileImage: true,
           position: { select: { id: true, name: true, level: true } },
         },
         orderBy: { employeeCode: "asc" },

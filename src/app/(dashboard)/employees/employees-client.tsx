@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Department {
   id: string;
@@ -69,6 +70,7 @@ interface Employee {
   hireDate: string | null;
   grade: number | null;
   isActive: boolean;
+  profileImage: string | null;
   department: Department | null;
   position: Position | null;
 }
@@ -512,15 +514,23 @@ export default function EmployeesClient({
                           </TableCell>
                           {showName && (
                             <TableCell>
-                              <div>
-                                <div className="font-medium">
-                                  {employee.lastName} {employee.firstName}
-                                </div>
-                                {employee.lastNameKana && employee.firstNameKana && (
-                                  <div className="text-sm text-muted-foreground">
-                                    {employee.lastNameKana} {employee.firstNameKana}
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8 shrink-0">
+                                  <AvatarImage src={employee.profileImage ?? undefined} />
+                                  <AvatarFallback className="text-xs">
+                                    {employee.lastName?.[0]}{employee.firstName?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium">
+                                    {employee.lastName} {employee.firstName}
                                   </div>
-                                )}
+                                  {employee.lastNameKana && employee.firstNameKana && (
+                                    <div className="text-sm text-muted-foreground">
+                                      {employee.lastNameKana} {employee.firstNameKana}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </TableCell>
                           )}
