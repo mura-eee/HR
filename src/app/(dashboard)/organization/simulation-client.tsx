@@ -591,8 +591,45 @@ export default function SimulationClient({
     }
   };
 
-  // Flatten depts for top-level columns (parent depts only)
-  const topDepts = simDepts;
+  // Recursively render dept columns (handles 班・グループ at any depth)
+  const renderDeptCols = useCallback(
+    (depts: SimDepartment[]): React.ReactNode =>
+      depts.map((dept) => {
+        if (dept.children.length === 0) {
+          return (
+            <DroppableDeptCol
+              key={dept.id}
+              dept={dept}
+              allEmps={allEmps}
+              onEdit={setEditingEmp}
+            />
+          );
+        }
+        // Has sub-departments: wrap in a group box
+        const directEmps = allEmps.filter((e) => e.departmentId === dept.id);
+        return (
+          <div
+            key={dept.id}
+            className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50/40 p-2 min-w-max"
+          >
+            <p className="text-xs font-semibold text-slate-500 px-1 pb-0.5 border-b border-slate-200">
+              {dept.name}
+            </p>
+            <div className="flex gap-3">
+              {directEmps.length > 0 && (
+                <DroppableDeptCol
+                  dept={dept}
+                  allEmps={allEmps}
+                  onEdit={setEditingEmp}
+                />
+              )}
+              {renderDeptCols(dept.children)}
+            </div>
+          </div>
+        );
+      }),
+    [allEmps, setEditingEmp]
+  );
 
   return (
     <div className="space-y-4">
@@ -702,14 +739,7 @@ export default function SimulationClient({
       >
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
-            {topDepts.map((dept) => (
-              <DroppableDeptCol
-                key={dept.id}
-                dept={dept}
-                allEmps={allEmps}
-                onEdit={setEditingEmp}
-              />
-            ))}
+            {renderDeptCols(simDepts)}
           </div>
         </div>
 
