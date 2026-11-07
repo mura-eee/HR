@@ -20,7 +20,11 @@ import {
   ChevronRight,
   GitFork,
   Building2,
+  BarChart3,
+  Shuffle,
 } from "lucide-react";
+import CrossTabClient from "./crosstab-client";
+import SimulationClient from "./simulation-client";
 import Link from "next/link";
 
 // ---------------------------------------------------------------------------
@@ -858,25 +862,33 @@ export default function OrgChartClient({
       </div>
 
       <Tabs defaultValue="visual">
-        <TabsList>
-          <TabsTrigger value="visual" className="gap-1.5">
-            <GitFork className="w-4 h-4" />
+        <TabsList className="flex flex-wrap h-auto gap-1">
+          <TabsTrigger value="visual" className="gap-1.5 text-xs sm:text-sm">
+            <GitFork className="w-3.5 h-3.5" />
             ビジュアル
           </TabsTrigger>
-          <TabsTrigger value="tree" className="gap-1.5">
-            <Network className="w-4 h-4" />
+          <TabsTrigger value="tree" className="gap-1.5 text-xs sm:text-sm">
+            <Network className="w-3.5 h-3.5" />
             ツリー表示
           </TabsTrigger>
-          <TabsTrigger value="card" className="gap-1.5">
-            <LayoutGrid className="w-4 h-4" />
+          <TabsTrigger value="card" className="gap-1.5 text-xs sm:text-sm">
+            <LayoutGrid className="w-3.5 h-3.5" />
             カード表示
           </TabsTrigger>
           {!selectedCompanyId && (
-            <TabsTrigger value="group" className="gap-1.5">
-              <Building2 className="w-4 h-4" />
+            <TabsTrigger value="group" className="gap-1.5 text-xs sm:text-sm">
+              <Building2 className="w-3.5 h-3.5" />
               グループ
             </TabsTrigger>
           )}
+          <TabsTrigger value="crosstab" className="gap-1.5 text-xs sm:text-sm">
+            <BarChart3 className="w-3.5 h-3.5" />
+            クロス集計
+          </TabsTrigger>
+          <TabsTrigger value="simulation" className="gap-1.5 text-xs sm:text-sm">
+            <Shuffle className="w-3.5 h-3.5" />
+            配置シミュレーション
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="visual" className="mt-4">
@@ -908,6 +920,14 @@ export default function OrgChartClient({
             <GroupCardView companyGroups={companyGroups} />
           </TabsContent>
         )}
+
+        <TabsContent value="crosstab" className="mt-4">
+          <CrossTabClient companyId={selectedCompanyId} />
+        </TabsContent>
+
+        <TabsContent value="simulation" className="mt-4">
+          <SimulationClient initialDepartments={departments} />
+        </TabsContent>
       </Tabs>
     </div>
   );
