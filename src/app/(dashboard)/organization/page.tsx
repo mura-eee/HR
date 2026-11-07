@@ -13,6 +13,7 @@ interface EmployeeData {
   firstName: string;
   profileImage: string | null;
   isActive: boolean;
+  workRole: string | null;
   position: { id: string; name: string; level: number } | null;
 }
 
@@ -22,6 +23,7 @@ interface DepartmentData {
   code: string;
   parentDepartmentId: string | null;
   sortOrder: number;
+  managerName: string | null;
   employees: EmployeeData[];
 }
 
@@ -31,6 +33,7 @@ interface DeptNode {
   code: string;
   parentDepartmentId: string | null;
   sortOrder: number;
+  managerName: string | null;
   employeeCount: number;
   employees: EmployeeData[];
   children: DeptNode[];
@@ -46,6 +49,7 @@ function buildTree(depts: DepartmentData[], parentId: string | null): DeptNode[]
       code: d.code,
       parentDepartmentId: d.parentDepartmentId,
       sortOrder: d.sortOrder,
+      managerName: d.managerName ?? null,
       employeeCount: d.employees.filter((e) => e.isActive).length,
       employees: d.employees.filter((e) => e.isActive),
       children: buildTree(depts, d.id),

@@ -67,6 +67,7 @@ export const getCachedOrgDepartments = unstable_cache(
             firstName: true,
             profileImage: true,
             isActive: true,
+            workRole: true,
             position: { select: { id: true, name: true, level: true } },
           },
         },

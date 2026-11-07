@@ -130,6 +130,7 @@ model Department {
   parentDepartment   Department?  @relation("DepartmentHierarchy", fields: [parentDepartmentId], references: [id])
   childDepartments   Department[] @relation("DepartmentHierarchy")
   sortOrder          Int          @default(0)
+  managerName        String?
   employees          Employee[]
   competencyItems    CompetencyItem[]
   createdAt          DateTime     @default(now())

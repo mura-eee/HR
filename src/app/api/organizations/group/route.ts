@@ -8,6 +8,7 @@ interface EmployeeData {
   employeeCode: string;
   lastName: string;
   firstName: string;
+  workRole: string | null;
   position: { id: string; name: string; level: number } | null;
 }
 
@@ -17,6 +18,7 @@ interface DepartmentData {
   code: string;
   parentDepartmentId: string | null;
   sortOrder: number;
+  managerName: string | null;
   employees: EmployeeData[];
 }
 
@@ -26,6 +28,7 @@ interface DeptNode {
   code: string;
   parentDepartmentId: string | null;
   sortOrder: number;
+  managerName: string | null;
   employeeCount: number;
   employees: EmployeeData[];
   children: DeptNode[];
@@ -41,6 +44,7 @@ function buildTree(depts: DepartmentData[], parentId: string | null): DeptNode[]
       code: d.code,
       parentDepartmentId: d.parentDepartmentId,
       sortOrder: d.sortOrder,
+      managerName: d.managerName ?? null,
       employeeCount: d.employees.length,
       employees: d.employees,
       children: buildTree(depts, d.id),
@@ -91,6 +95,7 @@ export async function GET() {
             employeeCode: true,
             lastName: true,
             firstName: true,
+            workRole: true,
             position: { select: { id: true, name: true, level: true } },
           },
           orderBy: [

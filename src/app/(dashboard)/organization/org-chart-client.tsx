@@ -34,6 +34,7 @@ interface Employee {
   firstName: string;
   profileImage: string | null;
   isActive: boolean;
+  workRole: string | null;
   position: {
     id: string;
     name: string;
@@ -47,6 +48,7 @@ interface DepartmentNode {
   code: string;
   parentDepartmentId: string | null;
   sortOrder: number;
+  managerName?: string | null;
   employeeCount: number;
   employees: Employee[];
   children: DepartmentNode[];
@@ -169,9 +171,9 @@ function TreeNode({
                 <p className="text-sm font-medium text-gray-800">
                   {emp.lastName} {emp.firstName}
                 </p>
-                {emp.position && (
+                {(emp.position || emp.workRole) && (
                   <p className="text-xs text-muted-foreground">
-                    {emp.position.name}
+                    {[emp.position?.name, emp.workRole].filter(Boolean).join("・")}
                   </p>
                 )}
               </div>
@@ -460,6 +462,14 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
                 {totalEmpCount(ln)}名
               </text>
               {!showEmps && (() => {
+                const managerName = ln.node.managerName;
+                if (managerName) {
+                  return (
+                    <text x={ln.cx} y={ln.y + 50} textAnchor="middle" fontSize={9} fill="#1d4ed8" fontWeight="500">
+                      {"管掌: " + managerName}
+                    </text>
+                  );
+                }
                 const tp = topPersonMap.get(ln);
                 if (!tp) return null;
                 const posLabel = tp.position?.name ? tp.position.name + " " : "";
@@ -471,16 +481,19 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
               })()}
               {showEmps && [...ln.node.employees]
                 .sort((a, b) => (b.position?.level ?? 0) - (a.position?.level ?? 0))
-                .map((emp, ei) => (
-                <text
-                  key={`${ni}-${emp.id}`}
-                  x={bx + 8} y={ln.y + BOX_H + ei * EMP_ROW_H + 13}
-                  fontSize={9}
-                  fill="#334155"
-                >
-                  {emp.lastName + " " + emp.firstName + (emp.position ? "（" + emp.position.name + "）" : "")}
-                </text>
-              ))}
+                .map((emp, ei) => {
+                  const roleLabel = [emp.position?.name, emp.workRole].filter(Boolean).join("・");
+                  return (
+                    <text
+                      key={`${ni}-${emp.id}`}
+                      x={bx + 8} y={ln.y + BOX_H + ei * EMP_ROW_H + 13}
+                      fontSize={9}
+                      fill="#334155"
+                    >
+                      {emp.lastName + " " + emp.firstName + (roleLabel ? "（" + roleLabel + "）" : "")}
+                    </text>
+                  );
+                })}
             </g>
           );
         })}
@@ -505,7 +518,11 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{emp.lastName} {emp.firstName}</p>
-                    {emp.position && <p className="text-xs text-muted-foreground">{emp.position.name}</p>}
+                    {(emp.position || emp.workRole) && (
+                      <p className="text-xs text-muted-foreground">
+                        {[emp.position?.name, emp.workRole].filter(Boolean).join("・")}
+                      </p>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -574,9 +591,9 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
                       <p className="text-sm font-medium truncate">
                         {emp.lastName} {emp.firstName}
                       </p>
-                      {emp.position && (
+                      {(emp.position || emp.workRole) && (
                         <p className="text-xs text-muted-foreground truncate">
-                          {emp.position.name}
+                          {[emp.position?.name, emp.workRole].filter(Boolean).join("・")}
                         </p>
                       )}
                     </div>
@@ -678,6 +695,9 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
             {totalCount}名
           </Badge>
         </div>
+        {dept.managerName && (
+          <p className="text-xs text-blue-700 font-medium mt-0.5">管掌: {dept.managerName}</p>
+        )}
       </CardHeader>
       <CardContent className="flex-1">
         {totalCount > 0 ? (
@@ -705,9 +725,9 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
                         <p className="text-xs font-medium truncate">
                           {emp.lastName} {emp.firstName}
                         </p>
-                        {emp.position && (
+                        {(emp.position || emp.workRole) && (
                           <p className="text-xs text-muted-foreground truncate">
-                            {emp.position.name}
+                            {[emp.position?.name, emp.workRole].filter(Boolean).join("・")}
                           </p>
                         )}
                       </div>
