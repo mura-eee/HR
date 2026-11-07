@@ -29,6 +29,7 @@ export default async function EmployeesPage() {
     hireDate: e.hireDate ? new Date(e.hireDate).toISOString() : null,
     grade: e.grade,
     isActive: e.isActive,
+    profileImage: e.profileImage,
     department: e.department,
     position: e.position,
   }));
