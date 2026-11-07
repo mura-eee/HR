@@ -82,6 +82,7 @@ export default function EditEmployeePage() {
     companyId: "",
     departmentId: "",
     positionId: "",
+    workRole: "",
     jobTypeId: "",
     grade: "",
     salaryStep: "",
@@ -143,6 +144,7 @@ export default function EditEmployeePage() {
         companyId: data.companyId || "",
         departmentId: data.departmentId || "",
         positionId: data.positionId || "",
+        workRole: data.workRole || "",
         jobTypeId: data.jobTypeId || "",
         grade: data.grade !== null && data.grade !== undefined ? String(data.grade) : "",
         salaryStep:
@@ -633,6 +635,15 @@ export default function EditEmployeePage() {
                   </Select>
                 </div>
               )}
+              <div className="space-y-2">
+                <Label htmlFor="workRole">役割（班長・リーダーなど）</Label>
+                <Input
+                  id="workRole"
+                  value={form.workRole || ""}
+                  onChange={(e) => handleChange("workRole", e.target.value)}
+                  placeholder="例：班長、現場リーダー"
+                />
+              </div>
               {can("jobType") !== "hidden" && (
                 <div className="space-y-2">
                   <Label htmlFor="jobTypeId">職種</Label>

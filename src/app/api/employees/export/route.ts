@@ -77,6 +77,7 @@ export async function GET() {
       "部署名": bumon,
       "班・グループ": han ?? "",
       "役職名": emp.position?.name ?? "",
+      "役割": emp.workRole ?? "",
       "職種名": emp.jobType?.name ?? "",
       // ── 給与情報 ──────────────────────────────────
       "等級": emp.grade ?? "",
@@ -133,6 +134,7 @@ export async function GET() {
     { wch: 18 }, // 部署名
     { wch: 16 }, // 班・グループ
     { wch: 14 }, // 役職名
+    { wch: 14 }, // 役割
     { wch: 14 }, // 職種名
     { wch: 6 },  // 等級
     { wch: 6 },  // 号俸

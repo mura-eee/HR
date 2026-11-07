@@ -134,6 +134,7 @@ interface Employee {
   emergencyContactAddress: string | null;
   profileImage: string | null;
   isActive: boolean;
+  workRole: string | null;
   company: { id: string; name: string } | null;
   department: Department | null;
   position: Position | null;
@@ -450,6 +451,12 @@ export default function EmployeeDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />役職</p>
                     <p className="font-medium">{employee.position?.name || "-"}</p>
+                  </div>
+                )}
+                {employee.workRole && (
+                  <div>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />役割</p>
+                    <p className="font-medium">{employee.workRole}</p>
                   </div>
                 )}
                 {can("jobType") !== "hidden" && (

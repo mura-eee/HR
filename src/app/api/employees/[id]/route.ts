@@ -93,6 +93,7 @@ export async function PUT(
       companyId,
       departmentId,
       positionId,
+      workRole,
       jobTypeId,
       grade,
       salaryStep,
@@ -179,6 +180,7 @@ export async function PUT(
         companyId: companyId || null,
         departmentId: departmentId || null,
         positionId: positionId || null,
+        workRole: workRole || null,
         jobTypeId: jobTypeId || null,
         grade: grade !== undefined && grade !== "" ? parseInt(grade, 10) : existing.grade,
         salaryStep:

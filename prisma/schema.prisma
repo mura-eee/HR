@@ -60,6 +60,7 @@ model Employee {
   department      Department? @relation(fields: [departmentId], references: [id])
   positionId      String?
   position        Position?   @relation(fields: [positionId], references: [id])
+  workRole        String?
   jobTypeId       String?
   jobType         JobType?    @relation(fields: [jobTypeId], references: [id])
   grade                Int?

@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
       companyId: company?.id || null,
       departmentId: dept?.id || null,
       positionId: position?.id || null,
+      workRole: String(row["役割"] ?? "").trim() || null,
       jobTypeId: jobType?.id || null,
       grade: toIntOrNull(row["等級"]),
       salaryStep: toIntOrNull(row["号俸"]),
