@@ -355,10 +355,6 @@ function findTopPerson(node: DepartmentNode): Employee | null {
   for (const emp of node.employees) {
     if (!best || (emp.position?.level ?? 0) > (best.position?.level ?? 0)) best = emp;
   }
-  for (const child of node.children) {
-    const cb = findTopPerson(child);
-    if (cb && (!best || (cb.position?.level ?? 0) > (best.position?.level ?? 0))) best = cb;
-  }
   return best;
 }
 
