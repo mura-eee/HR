@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  revalidateTag("employees");
-  revalidateTag("departments");
+  revalidateTag("employees", "seconds");
+  revalidateTag("departments", "seconds");
 
   return NextResponse.json({ revalidated: true });
 }
