@@ -252,9 +252,9 @@ export default function CrossTabClient({
                                 href={`/employees/${emp.id}`}
                                 title={`${emp.lastName} ${emp.firstName}${emp.position ? ` (${emp.position.name})` : ""}`}
                               >
-                                <Avatar className="w-8 h-8 ring-1 ring-white hover:ring-blue-400 transition-all hover:scale-110">
+                                <Avatar className="w-14 h-14 rounded-lg ring-1 ring-white hover:ring-blue-400 transition-all hover:scale-110">
                                   <AvatarImage src={emp.profileImage ?? undefined} />
-                                  <AvatarFallback className="text-xs bg-blue-100 text-blue-700">
+                                  <AvatarFallback className="text-sm rounded-lg bg-blue-100 text-blue-700">
                                     {emp.lastName?.[0]}{emp.firstName?.[0]}
                                   </AvatarFallback>
                                 </Avatar>
