@@ -515,9 +515,9 @@ export default function EmployeesClient({
                           {showName && (
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8 shrink-0">
+                                <Avatar className="h-12 w-12 shrink-0">
                                   <AvatarImage src={employee.profileImage ?? undefined} />
-                                  <AvatarFallback className="text-xs">
+                                  <AvatarFallback className="text-sm">
                                     {employee.lastName?.[0]}{employee.firstName?.[0]}
                                   </AvatarFallback>
                                 </Avatar>
