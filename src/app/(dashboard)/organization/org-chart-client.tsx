@@ -166,9 +166,9 @@ function TreeNode({
               href={`/employees/${emp.id}`}
               className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-white hover:bg-blue-50 hover:border-blue-300 transition-all"
             >
-              <Avatar className="w-14 h-14">
+              <Avatar className="w-20 h-20">
                 <AvatarImage src={emp.profileImage ?? undefined} />
-                <AvatarFallback className="text-base font-semibold">
+                <AvatarFallback className="text-xl font-semibold">
                   {emp.lastName.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -514,9 +514,9 @@ function VisualOrgChart({ departments }: { departments: DepartmentNode[] }) {
                   href={`/employees/${emp.id}`}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-blue-50 hover:border-blue-300 transition-all"
                 >
-                  <Avatar className="w-14 h-14">
+                  <Avatar className="w-20 h-20">
                     <AvatarImage src={emp.profileImage ?? undefined} />
-                    <AvatarFallback className="text-base font-semibold">{emp.lastName.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-xl font-semibold">{emp.lastName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="text-sm font-medium">{emp.lastName} {emp.firstName}</p>
@@ -584,9 +584,9 @@ function CardView({ departments }: { departments: DepartmentNode[] }) {
                     href={`/employees/${emp.id}`}
                     className="flex items-center gap-3 py-1.5 border-b last:border-0 hover:bg-blue-50 rounded px-1 transition-colors"
                   >
-                    <Avatar className="w-14 h-14">
+                    <Avatar className="w-20 h-20">
                       <AvatarImage src={emp.profileImage ?? undefined} />
-                      <AvatarFallback className="text-base font-semibold">
+                      <AvatarFallback className="text-xl font-semibold">
                         {emp.lastName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
@@ -719,9 +719,9 @@ function DeptCard({ dept }: { dept: DepartmentNode }) {
                       href={`/employees/${emp.id}`}
                       className="flex items-center gap-2 py-1 hover:bg-blue-50 rounded px-1 transition-colors"
                     >
-                      <Avatar className="w-12 h-12 flex-shrink-0">
+                      <Avatar className="w-16 h-16 flex-shrink-0">
                         <AvatarImage src={emp.profileImage ?? undefined} />
-                        <AvatarFallback className="text-base font-semibold">
+                        <AvatarFallback className="text-lg font-semibold">
                           {emp.lastName.charAt(0)}
                         </AvatarFallback>
                       </Avatar>

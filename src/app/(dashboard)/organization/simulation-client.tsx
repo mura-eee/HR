@@ -231,9 +231,9 @@ function DraggableEmpCard({
         ${isDragging ? "opacity-30" : "cursor-grab hover:border-blue-300 hover:shadow-sm"}
       `}
     >
-      <Avatar className="w-14 h-14 shrink-0">
+      <Avatar className="w-20 h-20 shrink-0">
         <AvatarImage src={emp.profileImage ?? undefined} />
-        <AvatarFallback className="text-base font-semibold">{emp.lastName?.[0]}</AvatarFallback>
+        <AvatarFallback className="text-xl font-semibold">{emp.lastName?.[0]}</AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium truncate">{emp.lastName} {emp.firstName}</p>
@@ -745,10 +745,10 @@ export default function SimulationClient({
 
         <DragOverlay>
           {activeEmp && (
-            <div className="flex items-center gap-2 p-2 rounded-lg border border-blue-400 bg-white shadow-lg opacity-95 w-60">
-              <Avatar className="w-14 h-14 shrink-0">
+            <div className="flex items-center gap-2 p-2 rounded-lg border border-blue-400 bg-white shadow-lg opacity-95 w-64">
+              <Avatar className="w-20 h-20 shrink-0">
                 <AvatarImage src={activeEmp.profileImage ?? undefined} />
-                <AvatarFallback className="text-base font-semibold">{activeEmp.lastName?.[0]}</AvatarFallback>
+                <AvatarFallback className="text-xl font-semibold">{activeEmp.lastName?.[0]}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="text-xs font-medium truncate">{activeEmp.lastName} {activeEmp.firstName}</p>
