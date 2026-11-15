@@ -616,7 +616,7 @@ export default function EditEmployeePage() {
           {/* Organization */}
           <Card>
             <CardHeader>
-              <CardTitle>所属・給与情報</CardTitle>
+              <CardTitle>所属情報</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               {can("company") !== "hidden" && (
@@ -745,166 +745,6 @@ export default function EditEmployeePage() {
                   </Select>
                 </div>
               )}
-              {can("grade") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="grade">等級</Label>
-                  <Input
-                    id="grade"
-                    type="number"
-                    min="1"
-                    value={form.grade}
-                    onChange={(e) => handleChange("grade", e.target.value)}
-                    placeholder="例: 3"
-                    disabled={can("grade") === "view"}
-                  />
-                </div>
-              )}
-              {can("salaryStep") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="salaryStep">号俸</Label>
-                  <Input
-                    id="salaryStep"
-                    type="number"
-                    min="1"
-                    value={form.salaryStep}
-                    onChange={(e) => handleChange("salaryStep", e.target.value)}
-                    placeholder="例: 5"
-                    disabled={can("salaryStep") === "view"}
-                  />
-                </div>
-              )}
-              {can("baseSalary") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="baseSalary">基本給</Label>
-                  <Input
-                    id="baseSalary"
-                    type="number"
-                    min="0"
-                    value={form.baseSalary}
-                    onChange={(e) => handleChange("baseSalary", e.target.value)}
-                    placeholder="例: 300000"
-                    disabled={can("baseSalary") === "view"}
-                  />
-                </div>
-              )}
-              {can("qualificationAllowance") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="qualificationAllowance">資格手当</Label>
-                  <Input
-                    id="qualificationAllowance"
-                    type="number"
-                    min="0"
-                    value={form.qualificationAllowance}
-                    onChange={(e) => handleChange("qualificationAllowance", e.target.value)}
-                    placeholder="例: 10000"
-                    disabled={can("qualificationAllowance") === "view"}
-                  />
-                </div>
-              )}
-              {can("positionAllowance") !== "hidden" && (
-                <div className="space-y-2">
-                  <Label htmlFor="positionAllowance">役職手当</Label>
-                  <Input
-                    id="positionAllowance"
-                    type="number"
-                    min="0"
-                    value={form.positionAllowance}
-                    onChange={(e) => handleChange("positionAllowance", e.target.value)}
-                    placeholder="例: 20000"
-                    disabled={can("positionAllowance") === "view"}
-                  />
-                </div>
-              )}
-              {/* その他手当1 */}
-              {can("otherAllowance1") !== "hidden" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance1Name">その他手当①（名称）</Label>
-                    <Input
-                      id="otherAllowance1Name"
-                      value={form.otherAllowance1Name}
-                      onChange={(e) => handleChange("otherAllowance1Name", e.target.value)}
-                      placeholder="例: 通勤手当"
-                      disabled={can("otherAllowance1") === "view"}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance1Amount">その他手当①（金額）</Label>
-                    <Input
-                      id="otherAllowance1Amount"
-                      type="number"
-                      min="0"
-                      value={form.otherAllowance1Amount}
-                      onChange={(e) => handleChange("otherAllowance1Amount", e.target.value)}
-                      placeholder="例: 15000"
-                      disabled={can("otherAllowance1") === "view"}
-                    />
-                  </div>
-                </>
-              )}
-              {/* その他手当2 */}
-              {can("otherAllowance2") !== "hidden" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance2Name">その他手当②（名称）</Label>
-                    <Input
-                      id="otherAllowance2Name"
-                      value={form.otherAllowance2Name}
-                      onChange={(e) => handleChange("otherAllowance2Name", e.target.value)}
-                      placeholder="例: 住宅手当"
-                      disabled={can("otherAllowance2") === "view"}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance2Amount">その他手当②（金額）</Label>
-                    <Input
-                      id="otherAllowance2Amount"
-                      type="number"
-                      min="0"
-                      value={form.otherAllowance2Amount}
-                      onChange={(e) => handleChange("otherAllowance2Amount", e.target.value)}
-                      placeholder="例: 20000"
-                      disabled={can("otherAllowance2") === "view"}
-                    />
-                  </div>
-                </>
-              )}
-              {/* その他手当3 */}
-              {can("otherAllowance3") !== "hidden" && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance3Name">その他手当③（名称）</Label>
-                    <Input
-                      id="otherAllowance3Name"
-                      value={form.otherAllowance3Name}
-                      onChange={(e) => handleChange("otherAllowance3Name", e.target.value)}
-                      placeholder="例: 家族手当"
-                      disabled={can("otherAllowance3") === "view"}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="otherAllowance3Amount">その他手当③（金額）</Label>
-                    <Input
-                      id="otherAllowance3Amount"
-                      type="number"
-                      min="0"
-                      value={form.otherAllowance3Amount}
-                      onChange={(e) => handleChange("otherAllowance3Amount", e.target.value)}
-                      placeholder="例: 10000"
-                      disabled={can("otherAllowance3") === "view"}
-                    />
-                  </div>
-                </>
-              )}
-              {/* 合計給与（自動計算） */}
-              {showSalaryTotal && (
-                <div className="space-y-2 sm:col-span-2">
-                  <Label>合計給与</Label>
-                  <div className="h-10 px-3 py-2 rounded-md border bg-muted font-semibold text-lg">
-                    ¥{salaryTotal.toLocaleString()}
-                  </div>
-                </div>
-              )}
               <div className="space-y-2">
                 <Label htmlFor="isActive">ステータス</Label>
                 <Select
@@ -924,6 +764,171 @@ export default function EditEmployeePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Salary */}
+          {showSalaryTotal && (
+            <Card>
+              <CardHeader>
+                <CardTitle>給与・等級</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                {can("grade") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="grade">等級</Label>
+                    <Input
+                      id="grade"
+                      type="number"
+                      min="1"
+                      value={form.grade}
+                      onChange={(e) => handleChange("grade", e.target.value)}
+                      placeholder="例: 3"
+                      disabled={can("grade") === "view"}
+                    />
+                  </div>
+                )}
+                {can("salaryStep") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="salaryStep">号俸</Label>
+                    <Input
+                      id="salaryStep"
+                      type="number"
+                      min="1"
+                      value={form.salaryStep}
+                      onChange={(e) => handleChange("salaryStep", e.target.value)}
+                      placeholder="例: 5"
+                      disabled={can("salaryStep") === "view"}
+                    />
+                  </div>
+                )}
+                {can("baseSalary") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="baseSalary">基本給</Label>
+                    <Input
+                      id="baseSalary"
+                      type="number"
+                      min="0"
+                      value={form.baseSalary}
+                      onChange={(e) => handleChange("baseSalary", e.target.value)}
+                      placeholder="例: 300000"
+                      disabled={can("baseSalary") === "view"}
+                    />
+                  </div>
+                )}
+                {can("qualificationAllowance") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="qualificationAllowance">資格手当</Label>
+                    <Input
+                      id="qualificationAllowance"
+                      type="number"
+                      min="0"
+                      value={form.qualificationAllowance}
+                      onChange={(e) => handleChange("qualificationAllowance", e.target.value)}
+                      placeholder="例: 10000"
+                      disabled={can("qualificationAllowance") === "view"}
+                    />
+                  </div>
+                )}
+                {can("positionAllowance") !== "hidden" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="positionAllowance">役職手当</Label>
+                    <Input
+                      id="positionAllowance"
+                      type="number"
+                      min="0"
+                      value={form.positionAllowance}
+                      onChange={(e) => handleChange("positionAllowance", e.target.value)}
+                      placeholder="例: 20000"
+                      disabled={can("positionAllowance") === "view"}
+                    />
+                  </div>
+                )}
+                {can("otherAllowance1") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance1Name">その他手当①（名称）</Label>
+                      <Input
+                        id="otherAllowance1Name"
+                        value={form.otherAllowance1Name}
+                        onChange={(e) => handleChange("otherAllowance1Name", e.target.value)}
+                        placeholder="例: 通勤手当"
+                        disabled={can("otherAllowance1") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance1Amount">その他手当①（金額）</Label>
+                      <Input
+                        id="otherAllowance1Amount"
+                        type="number"
+                        min="0"
+                        value={form.otherAllowance1Amount}
+                        onChange={(e) => handleChange("otherAllowance1Amount", e.target.value)}
+                        placeholder="例: 15000"
+                        disabled={can("otherAllowance1") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                {can("otherAllowance2") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance2Name">その他手当②（名称）</Label>
+                      <Input
+                        id="otherAllowance2Name"
+                        value={form.otherAllowance2Name}
+                        onChange={(e) => handleChange("otherAllowance2Name", e.target.value)}
+                        placeholder="例: 住宅手当"
+                        disabled={can("otherAllowance2") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance2Amount">その他手当②（金額）</Label>
+                      <Input
+                        id="otherAllowance2Amount"
+                        type="number"
+                        min="0"
+                        value={form.otherAllowance2Amount}
+                        onChange={(e) => handleChange("otherAllowance2Amount", e.target.value)}
+                        placeholder="例: 20000"
+                        disabled={can("otherAllowance2") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                {can("otherAllowance3") !== "hidden" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance3Name">その他手当③（名称）</Label>
+                      <Input
+                        id="otherAllowance3Name"
+                        value={form.otherAllowance3Name}
+                        onChange={(e) => handleChange("otherAllowance3Name", e.target.value)}
+                        placeholder="例: 家族手当"
+                        disabled={can("otherAllowance3") === "view"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="otherAllowance3Amount">その他手当③（金額）</Label>
+                      <Input
+                        id="otherAllowance3Amount"
+                        type="number"
+                        min="0"
+                        value={form.otherAllowance3Amount}
+                        onChange={(e) => handleChange("otherAllowance3Amount", e.target.value)}
+                        placeholder="例: 10000"
+                        disabled={can("otherAllowance3") === "view"}
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>合計給与</Label>
+                  <div className="h-10 px-3 py-2 rounded-md border bg-muted font-semibold text-lg">
+                    ¥{salaryTotal.toLocaleString()}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* 社会保険情報 */}
           {showSocialInsuranceCard && (

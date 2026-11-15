@@ -267,6 +267,16 @@ export default function EmployeeDetailPage() {
     );
   }
 
+  const showSalaryTab =
+    can("grade") !== "hidden" ||
+    can("salaryStep") !== "hidden" ||
+    can("baseSalary") !== "hidden" ||
+    can("qualificationAllowance") !== "hidden" ||
+    can("positionAllowance") !== "hidden" ||
+    can("otherAllowance1") !== "hidden" ||
+    can("otherAllowance2") !== "hidden" ||
+    can("otherAllowance3") !== "hidden";
+
   return (
     <div className="space-y-4">
       {/* Back button */}
@@ -365,10 +375,12 @@ export default function EmployeeDetailPage() {
             <User className="mr-1.5 h-3.5 w-3.5" />
             基本情報
           </TabsTrigger>
-          <TabsTrigger value="salary" className="text-xs sm:text-sm">
-            <Banknote className="mr-1.5 h-3.5 w-3.5" />
-            給与・等級
-          </TabsTrigger>
+          {showSalaryTab && (
+            <TabsTrigger value="salary" className="text-xs sm:text-sm">
+              <Banknote className="mr-1.5 h-3.5 w-3.5" />
+              給与・等級
+            </TabsTrigger>
+          )}
           <TabsTrigger value="insurance" className="text-xs sm:text-sm">
             <Shield className="mr-1.5 h-3.5 w-3.5" />
             社会保険
