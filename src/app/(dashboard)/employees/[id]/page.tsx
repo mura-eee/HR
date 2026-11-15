@@ -277,6 +277,20 @@ export default function EmployeeDetailPage() {
     can("otherAllowance2") !== "hidden" ||
     can("otherAllowance3") !== "hidden";
 
+  const showInsuranceTab =
+    can("healthInsurance") !== "hidden" ||
+    can("pension") !== "hidden" ||
+    can("basicPensionNumber") !== "hidden" ||
+    can("employmentInsurance") !== "hidden" ||
+    can("bloodType") !== "hidden";
+
+  const showEvaluationTab =
+    can("evaluationSummary") !== "hidden" ||
+    can("evaluationCompetency") !== "hidden" ||
+    can("evaluationKpi") !== "hidden";
+
+  const showEmergencyTab = can("emergencyContact") !== "hidden";
+
   return (
     <div className="space-y-4">
       {/* Back button */}
@@ -381,22 +395,28 @@ export default function EmployeeDetailPage() {
               給与・等級
             </TabsTrigger>
           )}
-          <TabsTrigger value="insurance" className="text-xs sm:text-sm">
-            <Shield className="mr-1.5 h-3.5 w-3.5" />
-            社会保険
-          </TabsTrigger>
+          {showInsuranceTab && (
+            <TabsTrigger value="insurance" className="text-xs sm:text-sm">
+              <Shield className="mr-1.5 h-3.5 w-3.5" />
+              社会保険
+            </TabsTrigger>
+          )}
           <TabsTrigger value="qualifications" className="text-xs sm:text-sm">
             <Award className="mr-1.5 h-3.5 w-3.5" />
             資格・スキル
           </TabsTrigger>
-          <TabsTrigger value="evaluations" className="text-xs sm:text-sm">
-            <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
-            評価履歴
-          </TabsTrigger>
-          <TabsTrigger value="emergency" className="text-xs sm:text-sm">
-            <Heart className="mr-1.5 h-3.5 w-3.5" />
-            緊急連絡先
-          </TabsTrigger>
+          {showEvaluationTab && (
+            <TabsTrigger value="evaluations" className="text-xs sm:text-sm">
+              <ClipboardList className="mr-1.5 h-3.5 w-3.5" />
+              評価履歴
+            </TabsTrigger>
+          )}
+          {showEmergencyTab && (
+            <TabsTrigger value="emergency" className="text-xs sm:text-sm">
+              <Heart className="mr-1.5 h-3.5 w-3.5" />
+              緊急連絡先
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Basic Info Tab */}
