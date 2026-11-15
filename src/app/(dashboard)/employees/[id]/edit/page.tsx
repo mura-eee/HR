@@ -358,7 +358,7 @@ export default function EditEmployeePage() {
               {can("email") !== "hidden" && (
                 <div className="space-y-2">
                   <Label htmlFor="email">
-                    メールアドレス <span className="text-destructive">*</span>
+                    メールアドレス
                   </Label>
                   <Input
                     id="email"
@@ -366,7 +366,6 @@ export default function EditEmployeePage() {
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="例: taro@example.com"
-                    required
                     disabled={can("email") === "view"}
                   />
                 </div>

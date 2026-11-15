@@ -146,7 +146,7 @@ export default function NewEmployeePage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  メールアドレス <span className="text-destructive">*</span>
+                  メールアドレス
                 </Label>
                 <Input
                   id="email"
@@ -154,7 +154,6 @@ export default function NewEmployeePage() {
                   value={form.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="例: taro@example.com"
-                  required
                 />
               </div>
               <div className="space-y-2">
