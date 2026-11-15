@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, History } from "lucide-react";
+import { ArrowLeft, Save, Loader2, History, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,9 @@ export default function EditEmployeePage() {
   const [error, setError] = useState("");
   const [originalName, setOriginalName] = useState({ lastName: "", firstName: "" });
   const [nameChangeReason, setNameChangeReason] = useState("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const profileImageInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     employeeCode: "",
@@ -114,6 +117,7 @@ export default function EditEmployeePage() {
     emergencyContactPhone: "",
     emergencyContactAddress: "",
     isActive: true,
+    profileImage: "",
   });
 
   const { can } = useFieldPermissions(form.companyId || null, form.departmentId || null);
@@ -197,6 +201,7 @@ export default function EditEmployeePage() {
         emergencyContactPhone: data.emergencyContactPhone || "",
         emergencyContactAddress: data.emergencyContactAddress || "",
         isActive: data.isActive,
+        profileImage: data.profileImage || "",
       });
       setOriginalName({ lastName: data.lastName || "", firstName: data.firstName || "" });
     } catch (err) {
@@ -247,16 +252,41 @@ export default function EditEmployeePage() {
     setError("");
   };
 
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfileImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setProfileImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError("");
 
     try {
+      let profileImageUrl = form.profileImage;
+      if (profileImageFile) {
+        const uploadForm = new FormData();
+        uploadForm.append("file", profileImageFile);
+        const uploadRes = await fetch(`/api/employees/${id}/profile-image`, {
+          method: "POST",
+          body: uploadForm,
+        });
+        if (!uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          throw new Error(uploadData.error || "写真のアップロードに失敗しました");
+        }
+        const uploadData = await uploadRes.json();
+        profileImageUrl = uploadData.url;
+      }
+
       const res = await fetch(`/api/employees/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, nameChangeReason }),
+        body: JSON.stringify({ ...form, nameChangeReason, profileImage: profileImageUrl }),
       });
 
       if (!res.ok) {
@@ -486,6 +516,56 @@ export default function EditEmployeePage() {
                   />
                 </div>
               )}
+              <div className="space-y-2 sm:col-span-2">
+                <Label>顔写真</Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative h-24 w-24 rounded-full overflow-hidden bg-muted border border-border flex items-center justify-center shrink-0">
+                    {profileImagePreview ? (
+                      <img src={profileImagePreview} alt="プレビュー" className="h-full w-full object-cover" />
+                    ) : form.profileImage ? (
+                      <img src={form.profileImage} alt="顔写真" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-muted-foreground text-xs">写真なし</span>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => profileImageInputRef.current?.click()}
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      写真を選択
+                    </Button>
+                    {(profileImagePreview || form.profileImage) && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setProfileImageFile(null);
+                          setProfileImagePreview(null);
+                          handleChange("profileImage", "");
+                        }}
+                      >
+                        写真を削除
+                      </Button>
+                    )}
+                    <input
+                      ref={profileImageInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfileImageChange}
+                    />
+                    {profileImageFile && (
+                      <p className="text-xs text-muted-foreground">{profileImageFile.name}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
