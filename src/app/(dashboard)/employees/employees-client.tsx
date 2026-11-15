@@ -452,7 +452,7 @@ export default function EmployeesClient({
             const colSpan = 2 + (showName ? 1 : 0) + (showDepartment ? 1 : 0) + (showPosition ? 1 : 0) + (showGrade ? 1 : 0);
 
             return (
-              <div className="rounded-md border">
+              <div className={`rounded-md border relative${loading ? " opacity-60 pointer-events-none" : ""}`}>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -487,13 +487,7 @@ export default function EmployeesClient({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loading ? (
-                      <TableRow>
-                        <TableCell colSpan={colSpan} className="text-center py-8">
-                          読み込み中...
-                        </TableCell>
-                      </TableRow>
-                    ) : employees.length === 0 ? (
+                    {employees.length === 0 && !loading ? (
                       <TableRow>
                         <TableCell
                           colSpan={colSpan}
