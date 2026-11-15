@@ -144,14 +144,6 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-muted rounded-lg text-sm">
-              <p className="font-medium mb-2">デモアカウント:</p>
-              <div className="space-y-1 text-muted-foreground">
-                <p>管理者: admin@example.com / admin123</p>
-                <p>マネージャー: manager@example.com / manager123</p>
-                <p>一般: user@example.com / user123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
