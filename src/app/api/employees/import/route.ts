@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getEffectivePermission } from "@/lib/server-permissions";
 import * as XLSX from "xlsx";
 
 function parseDate(val: unknown): Date | null {
@@ -32,6 +33,11 @@ export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const importPermission = await getEffectivePermission("employeeImport");
+  if (importPermission === null || importPermission === "hidden") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const formData = await request.formData();
