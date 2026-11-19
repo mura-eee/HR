@@ -170,8 +170,42 @@ export async function GET() {
     { wch: 16 }, // 氏名変更理由
   ];
 
+  // ── 資格情報シート ────────────────────────────────────────────────
+  const qualRecords = await prisma.employeeQualification.findMany({
+    include: {
+      employee: { select: { employeeCode: true, lastName: true, firstName: true } },
+      qualification: { select: { name: true } },
+    },
+    orderBy: [
+      { employee: { employeeCode: "asc" } },
+      { qualification: { name: "asc" } },
+    ],
+  });
+
+  const qualData = qualRecords.map((r) => ({
+    "社員番号": r.employee.employeeCode,
+    "社員名": `${r.employee.lastName} ${r.employee.firstName}`,
+    "資格": r.qualification.name,
+    "取得日": fmtDate(r.acquiredDate),
+    "有効期限": fmtDate(r.expiryDate),
+    "証明書番号": r.certificateNumber ?? "",
+    "資格証URL": r.certificateUrl ?? "",
+  }));
+
+  const wsQual = XLSX.utils.json_to_sheet(qualData);
+  wsQual["!cols"] = [
+    { wch: 12 },
+    { wch: 16 },
+    { wch: 24 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 20 },
+    { wch: 60 },
+  ];
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "スタッフ詳細データ");
+  XLSX.utils.book_append_sheet(wb, wsQual, "社員資格");
   const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
   const today = new Date().toISOString().slice(0, 10);

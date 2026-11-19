@@ -135,6 +135,9 @@ export default function EmployeesClient({
   const [retiredLoading, setRetiredLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const [qualImporting, setQualImporting] = useState(false);
+  const [qualImportResult, setQualImportResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
+  const qualFileInputRef = useRef<HTMLInputElement>(null);
   const [nameHistories, setNameHistories] = useState<NameHistory[]>([]);
   const [nameHistoryOpen, setNameHistoryOpen] = useState(false);
   const [nameHistoryLoading, setNameHistoryLoading] = useState(false);
@@ -306,6 +309,25 @@ export default function EmployeesClient({
     }
   };
 
+  const handleQualImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setQualImporting(true);
+    setQualImportResult(null);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/employee-qualifications/import", { method: "POST", body: formData });
+      const result = await res.json();
+      setQualImportResult(result);
+    } catch {
+      setQualImportResult({ created: 0, updated: 0, errors: ["インポートに失敗しました"] });
+    } finally {
+      setQualImporting(false);
+      if (qualFileInputRef.current) qualFileInputRef.current.value = "";
+    }
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) {
       return <ChevronsUpDown className="ml-1 h-4 w-4 inline opacity-40" />;
@@ -337,7 +359,7 @@ export default function EmployeesClient({
       </div>
 
       {/* データ管理 */}
-      {(can("employeeImport") !== "hidden" || can("employeeExport") !== "hidden") && (
+      {(can("employeeImport") !== "hidden" || can("employeeExport") !== "hidden" || can("qualificationImport") !== "hidden") && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -346,7 +368,7 @@ export default function EmployeesClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Excel出力 */}
               {can("employeeExport") !== "hidden" && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
@@ -355,7 +377,7 @@ export default function EmployeesClient({
                     <p className="font-medium">Excel出力（名簿）</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    全スタッフの個人情報をExcelに出力します。基本情報・給与・社会保険・緊急連絡先など全項目を含み、そのまま取込にも使用できます。
+                    全スタッフの個人情報をExcelに出力します。スタッフ詳細データと社員資格の2シート構成です。
                   </p>
                   <Button variant="outline" className="w-full sm:w-auto" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
@@ -364,12 +386,12 @@ export default function EmployeesClient({
                 </div>
               )}
 
-              {/* Excel取込 */}
+              {/* スタッフデータ取込 */}
               {can("employeeImport") !== "hidden" && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <FileUp className="h-5 w-5 text-blue-600" />
-                    <p className="font-medium">Excel取込</p>
+                    <p className="font-medium">スタッフデータ取込</p>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Excelファイルからスタッフデータを一括取込します。社員コードが一致する場合は更新、存在しない場合は新規登録します。
@@ -392,16 +414,58 @@ export default function EmployeesClient({
                   </Button>
                 </div>
               )}
+
+              {/* 資格データ取込 */}
+              {can("qualificationImport") !== "hidden" && (
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FileUp className="h-5 w-5 text-purple-600" />
+                    <p className="font-medium">資格データ取込</p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    ExcelファイルからExcel出力の「社員資格」シートを取込みます。社員コードと資格名で一致する場合は更新します。
+                  </p>
+                  <input
+                    ref={qualFileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={handleQualImport}
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => qualFileInputRef.current?.click()}
+                    disabled={qualImporting}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {qualImporting ? "取込中..." : "Excelファイルを選択して取込"}
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* インポート結果 */}
+            {/* スタッフインポート結果 */}
             {importResult && (
               <div className={`mt-4 rounded-md p-4 text-sm ${importResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
-                <p className="font-medium mb-1">取込結果</p>
+                <p className="font-medium mb-1">スタッフデータ取込結果</p>
                 <p>新規登録: {importResult.created}件 / 更新: {importResult.updated}件</p>
                 {importResult.errors.length > 0 && (
                   <ul className="mt-2 space-y-1 text-yellow-800">
                     {importResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* 資格インポート結果 */}
+            {qualImportResult && (
+              <div className={`mt-4 rounded-md p-4 text-sm ${qualImportResult.errors.length > 0 ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200"}`}>
+                <p className="font-medium mb-1">資格データ取込結果</p>
+                <p>新規登録: {qualImportResult.created}件 / 更新: {qualImportResult.updated}件</p>
+                {qualImportResult.errors.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-yellow-800">
+                    {qualImportResult.errors.map((e, i) => <li key={i}>・{e}</li>)}
                   </ul>
                 )}
               </div>
