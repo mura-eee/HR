@@ -110,6 +110,7 @@ export async function GET() {
       "雇用保険資格喪失日": fmtDate(emp.employmentInsuranceLostDate),
       // ── 緊急連絡先 ────────────────────────────────
       "緊急連絡先氏名": emp.emergencyContactName ?? "",
+      "緊急連絡先フリガナ": emp.emergencyContactNameKana ?? "",
       "緊急連絡先続柄": emp.emergencyContactRelationship ?? "",
       "緊急連絡先電話番号": emp.emergencyContactPhone ?? "",
       "緊急連絡先住所": emp.emergencyContactAddress ?? "",
@@ -164,6 +165,7 @@ export async function GET() {
     { wch: 16 }, // 雇用保険資格取得日
     { wch: 16 }, // 雇用保険資格喪失日
     { wch: 14 }, // 緊急連絡先氏名
+    { wch: 16 }, // 緊急連絡先フリガナ
     { wch: 10 }, // 緊急連絡先続柄
     { wch: 16 }, // 緊急連絡先電話番号
     { wch: 24 }, // 緊急連絡先住所

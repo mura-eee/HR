@@ -113,6 +113,7 @@ export default function EditEmployeePage() {
     bloodType: "",
     // 緊急連絡先
     emergencyContactName: "",
+    emergencyContactNameKana: "",
     emergencyContactRelationship: "",
     emergencyContactPhone: "",
     emergencyContactAddress: "",
@@ -197,6 +198,7 @@ export default function EditEmployeePage() {
         bloodType: data.bloodType || "",
         // 緊急連絡先
         emergencyContactName: data.emergencyContactName || "",
+        emergencyContactNameKana: data.emergencyContactNameKana || "",
         emergencyContactRelationship: data.emergencyContactRelationship || "",
         emergencyContactPhone: data.emergencyContactPhone || "",
         emergencyContactAddress: data.emergencyContactAddress || "",
@@ -1094,6 +1096,16 @@ export default function EditEmployeePage() {
                     value={form.emergencyContactName}
                     onChange={(e) => handleChange("emergencyContactName", e.target.value)}
                     placeholder="例: 山田 花子"
+                    disabled={can("emergencyContact") === "view"}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContactNameKana">氏名（フリガナ）</Label>
+                  <Input
+                    id="emergencyContactNameKana"
+                    value={form.emergencyContactNameKana}
+                    onChange={(e) => handleChange("emergencyContactNameKana", e.target.value)}
+                    placeholder="例: ヤマダ ハナコ"
                     disabled={can("emergencyContact") === "view"}
                   />
                 </div>

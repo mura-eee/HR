@@ -121,6 +121,7 @@ export async function PUT(
       bloodType,
       // 緊急連絡先
       emergencyContactName,
+      emergencyContactNameKana,
       emergencyContactRelationship,
       emergencyContactPhone,
       emergencyContactAddress,
@@ -229,6 +230,7 @@ export async function PUT(
         bloodType: bloodType ?? existing.bloodType,
         // 緊急連絡先
         emergencyContactName: emergencyContactName ?? existing.emergencyContactName,
+        emergencyContactNameKana: emergencyContactNameKana ?? existing.emergencyContactNameKana,
         emergencyContactRelationship: emergencyContactRelationship ?? existing.emergencyContactRelationship,
         emergencyContactPhone: emergencyContactPhone ?? existing.emergencyContactPhone,
         emergencyContactAddress: emergencyContactAddress ?? existing.emergencyContactAddress,

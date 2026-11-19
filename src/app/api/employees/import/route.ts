@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
       bloodType,
       // 緊急連絡先
       emergencyContactName: String(row["緊急連絡先氏名"] ?? "").trim() || null,
+      emergencyContactNameKana: String(row["緊急連絡先フリガナ"] ?? "").trim() || null,
       emergencyContactRelationship: String(row["緊急連絡先続柄"] ?? "").trim() || null,
       emergencyContactPhone: String(row["緊急連絡先電話番号"] ?? "").trim() || null,
       emergencyContactAddress: String(row["緊急連絡先住所"] ?? "").trim() || null,

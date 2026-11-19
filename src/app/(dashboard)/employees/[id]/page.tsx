@@ -131,6 +131,7 @@ interface Employee {
   bloodType: string | null;
   // 緊急連絡先
   emergencyContactName: string | null;
+  emergencyContactNameKana: string | null;
   emergencyContactRelationship: string | null;
   emergencyContactPhone: string | null;
   emergencyContactAddress: string | null;
@@ -846,7 +847,11 @@ export default function EmployeeDetailPage() {
             <CardContent>
               {can("emergencyContact") !== "hidden" ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4">
-                  <div><p className="text-xs text-muted-foreground mb-0.5">氏名</p><p className="font-medium">{employee.emergencyContactName || "-"}</p></div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">氏名</p>
+                    <p className="font-medium">{employee.emergencyContactName || "-"}</p>
+                    {employee.emergencyContactNameKana && <p className="text-sm text-muted-foreground">{employee.emergencyContactNameKana}</p>}
+                  </div>
                   <div><p className="text-xs text-muted-foreground mb-0.5">続柄</p><p className="font-medium">{employee.emergencyContactRelationship || "-"}</p></div>
                   <div><p className="text-xs text-muted-foreground mb-0.5">電話番号</p><p className="font-medium">{employee.emergencyContactPhone || "-"}</p></div>
                   <div className="sm:col-span-2 md:col-span-4"><p className="text-xs text-muted-foreground mb-0.5">住所</p><p className="font-medium">{employee.emergencyContactAddress || "-"}</p></div>

@@ -89,6 +89,7 @@ model Employee {
   bloodType                    String?
   // 緊急連絡先
   emergencyContactName         String?
+  emergencyContactNameKana     String?
   emergencyContactRelationship String?
   emergencyContactPhone        String?
   emergencyContactAddress      String?
